@@ -1,6 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
-
+from matplotlib.widgets import Slider, Button
 
 def SIR_NumInt(S_initial, I_inital, t_inital, t_final, dt, beta, gamma):
     
@@ -64,26 +64,21 @@ def SIS_VectorField(S_initial, I_inital, beta, gamma):
     dI = (beta*(x/population)*y - gamma*x)
     dS = -dI
 
-    plt.quiver(x,y,dI,dS)
+    plt.quiver(y,x,dS,dI)
     plt.xlabel("Susceptible")
     plt.ylabel("Infected")
     plt.title("SIS vector field")
-    plt.xlim(0,population)
-    plt.ylim(0,population)
     plt.show()
 
 def SIR_VectorField(S_initial, I_inital, beta, gamma):
     
-    fig = plt.figure()
-    ax = fig.gca(projection='3d')
 
     population = S_initial + I_inital
-    x,y,z = np.meshgrid(np.linspace(1,population,5),np.linspace(1,population,5),np.linspace(1,population,5) )
+    x,y = np.meshgrid(np.linspace(1,population,25),np.linspace(1,population,25))
     dS = (-beta*(y/population)*x)
     dI = (beta*(y/population)*x - gamma*y)
-    dR = (gamma*y)
 
-    ax.quiver(x,y,z,dS,dI,dR)
+    plt.quiver(x,y,dS,dI)
     plt.xlabel("Susceptible")
     plt.ylabel("Infected")
     plt.title("SIR vector field")
@@ -93,5 +88,5 @@ def SIR_VectorField(S_initial, I_inital, beta, gamma):
 
 
 
-SIR_VectorField(S_initial = 1000, I_inital = 200, beta=0.3, gamma=0.1)
+SIS_VectorField(S_initial=10000, I_inital=1, beta=1, gamma=0.5)
 
