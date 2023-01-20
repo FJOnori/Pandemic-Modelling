@@ -9,10 +9,13 @@ def read_uk_csv():
     df = df[df['location'] == 'United Kingdom']
     df.to_csv("/Users/finnjohnonori/Documents/GitHubR/owid-covid-data-uk.csv")
 
-
-
 def print_df():
     df = pd.read_csv("owid-covid-data-uk.csv")
     print(df)
 
-print_df()
+def contact_rate():
+    df = pd.read_csv("owid-covid-data-uk.csv")
+    beta = df['reproduction_rate']/12
+    beta2 = beta.fillna(0)
+    beta2.to_csv('beta.csv')
+

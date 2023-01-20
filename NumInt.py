@@ -1,6 +1,6 @@
 import numpy as np
+import pandas as pd
 import matplotlib.pyplot as plt
-from matplotlib.widgets import Slider, Button
 
 def SIR_NumInt(S_initial, I_inital, t_inital, t_final, dt, beta, gamma):
     
@@ -117,15 +117,22 @@ def SIR_VectorField(S_initial, I_inital, beta, gamma):
     plt.ylim(0,population)
     plt.show()
 
+def beta_graph():
+    df = pd.read_csv('beta.csv')
+    beta = list(df['beta'])
+    time = np.arange(0, len(beta))
+    plt.plot(time, beta)
+    plt.show()
+
+
+
 #beta => exposure rate, S to E
 #sigma => infection rate, E to I
 #gamma => recovery rate, I to R
 #epsilon => immunity loss rate, R to S
 #nu => Death rate
 #mu => Birth rate
+#SEIRS_NumInt(S_initial = 0.99999, E_inital = 0.00001, t_inital = 0, t_final=1000, dt= 0.04, beta=0.211, gamma=(1/12), mu=0, nu=0, epsilon = (1/365), sigma=(1/4))
 
-
-SEIRS_NumInt(S_initial = 65000000, E_inital = 1, t_inital = 0, t_final=365, dt= 0.01, beta=1.01, gamma=0.5, mu=0, nu=0, epsilon = 1, sigma=1.01)
-
-
+beta_graph()
 
