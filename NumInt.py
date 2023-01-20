@@ -57,6 +57,37 @@ def SIS_NumInt(S_initial, I_inital, t_inital, t_final, dt, beta, gamma):
     plt.legend()
     plt.show()
 
+def SEIRS_NumInt(S_initial, E_inital, t_inital, t_final, dt, beta, gamma, mu, nu, epsilon, sigma):
+    
+    S ,E, I ,R, T = [S_initial], [0], [E_inital], [0], [t_inital]
+    counter = 0
+    population = S_initial + E_inital
+
+    for t in np.arange(t_inital, t_final, dt):
+        
+        dS = (mu*population - beta*((I[counter]+ E[counter])/population)*S[counter] + epsilon*R[counter] - nu*S[counter]) * dt
+        dE = (beta*((I[counter] + E[counter])/population)*S[counter] - sigma*E[counter] - nu*E[counter]) * dt
+        dI = (sigma*E[counter] - gamma*I[counter] - nu*I[counter]) * dt
+        dR = (gamma*I[counter] - epsilon*R[counter] - nu*R[counter]) * dt
+        
+        S.append(S[counter] + dS)
+        E.append(E[counter] + dE)
+        I.append(I[counter] + dI)
+        R.append(R[counter] + dR)
+        T.append(t+dt)
+        counter += 1
+
+    plt.plot(T, S, label="Susceptible")
+    plt.plot(T, E, label="Exposed")
+    plt.plot(T, I, label="Infected")
+    plt.plot(T, R, label="Recovered")
+    plt.xlabel("Time")
+    plt.ylabel("Population")
+    plt.title("SEIRS Pandemic model")
+    plt.legend()
+    plt.show()
+
+
 def SIS_VectorField(S_initial, I_inital, beta, gamma):
     
     population = S_initial + I_inital
@@ -86,7 +117,15 @@ def SIR_VectorField(S_initial, I_inital, beta, gamma):
     plt.ylim(0,population)
     plt.show()
 
+#beta => exposure rate, S to E
+#sigma => infection rate, E to I
+#gamma => recovery rate, I to R
+#epsilon => immunity loss rate, R to S
+#nu => Death rate
+#mu => Birth rate
 
 
-SIS_VectorField(S_initial=10000, I_inital=1, beta=1, gamma=0.5)
+SEIRS_NumInt(S_initial = 65000000, E_inital = 1, t_inital = 0, t_final=365, dt= 0.01, beta=1.01, gamma=0.5, mu=0, nu=0, epsilon = 1, sigma=1.01)
+
+
 
