@@ -59,7 +59,7 @@ def SIS_NumInt(S_initial, I_inital, t_inital, t_final, dt, beta, gamma):
 
 def SEIRS_NumInt(S_initial, E_inital, t_inital, t_final, dt, beta, gamma, mu, nu, epsilon, sigma):
     
-    S ,E, I ,R, T = [S_initial], [0], [E_inital], [0], [t_inital]
+    S ,I, E ,R, T = [S_initial], [0], [E_inital], [0], [t_inital]
     counter = 0
     population = S_initial + E_inital
 
@@ -84,6 +84,39 @@ def SEIRS_NumInt(S_initial, E_inital, t_inital, t_final, dt, beta, gamma, mu, nu
     plt.xlabel("Time")
     plt.ylabel("Population")
     plt.title("SEIRS Pandemic model")
+    plt.legend()
+    plt.show()
+
+def SEVIRS_NumInt(S_initial, E_inital, t_inital, t_final, dt, beta, gamma, mu, nu, epsilon, sigma, upsilon1, upsilon2):
+    
+    S ,I, E ,R, V, T = [S_initial], [0], [E_inital], [0], [0], [t_inital]
+    counter = 0
+    population = S_initial + E_inital
+
+    for t in np.arange(t_inital, t_final, dt):
+        
+        dS = (mu*population - beta*((I[counter]+ E[counter])/population)*S[counter] + epsilon*R[counter] - nu*S[counter] - upsilon1*S[counter]) * dt
+        dE = (beta*((I[counter] + E[counter])/population)*S[counter] - sigma*E[counter] - nu*E[counter]) * dt
+        dI = (sigma*E[counter] - gamma*I[counter] - nu*I[counter]) * dt
+        dR = (gamma*I[counter] - epsilon*R[counter] - nu*R[counter] - upsilon2*R[counter]) * dt
+        dV = (upsilon1*S[counter] + upsilon2*R[counter] - nu*V[counter]) * dt
+        
+        S.append(S[counter] + dS)
+        E.append(E[counter] + dE)
+        I.append(I[counter] + dI)
+        R.append(R[counter] + dR)
+        V.append(V[counter] + dV)
+        T.append(t+dt)
+        counter += 1
+
+    plt.plot(T, S, label="Susceptible")
+    plt.plot(T, E, label="Exposed")
+    plt.plot(T, I, label="Infected")
+    plt.plot(T, R, label="Recovered")
+    plt.plot(T, V, label="Vaccinated")
+    plt.xlabel("Time (Days)")
+    plt.ylabel("Population (Percentage)")
+    plt.title("SEVIRS Pandemic model")
     plt.legend()
     plt.show()
 
@@ -117,22 +150,33 @@ def SIR_VectorField(S_initial, I_inital, beta, gamma):
     plt.ylim(0,population)
     plt.show()
 
-def beta_graph():
+def beta_graph_R():
     df = pd.read_csv('beta.csv')
     beta = list(df['beta'])
     time = np.arange(0, len(beta))
     plt.plot(time, beta)
+    plt.xlim(0,len(beta))
+    plt.ylim(0,0.25)
+    plt.xlabel("Time (days)")
+    plt.ylabel("BETA")
+    plt.title("UK Contact rate")
     plt.show()
 
+def beta_calculate(S_initial, E_inital, t_inital, t_final, dt, beta, mu, nu, epsilon, upsilon1):
+    df = pd.read_csv('owid-covid-data-uk.csv')
+    S ,I, E ,R, V, T = [S_initial], [0], [E_inital], [0], [0], [t_inital]
+    counter = 0
+    population = S_initial + E_inital
 
 
 #beta => exposure rate, S to E
 #sigma => infection rate, E to I
 #gamma => recovery rate, I to R
 #epsilon => immunity loss rate, R to S
+#upsilon1 => vaccination rate S to V
+#upsilon2 => vaccination rate R to V
 #nu => Death rate
 #mu => Birth rate
-#SEIRS_NumInt(S_initial = 0.99999, E_inital = 0.00001, t_inital = 0, t_final=1000, dt= 0.04, beta=0.211, gamma=(1/12), mu=0, nu=0, epsilon = (1/365), sigma=(1/4))
 
-beta_graph()
-
+#SEIRS_NumInt(S_initial= 0.99999, E_inital=0.00001, t_inital=0, t_final=1100, dt=0.04, beta=0.211, gamma=1/12, mu=0, nu=0, epsilon=1/365, sigma=1/4)
+SEVIRS_NumInt(S_initial= 67570000, E_inital=1, t_inital=0, t_final=1100, dt=0.04, beta=0.211, gamma=1/12, mu=1/28092, nu=1/29565, epsilon=1/365, sigma=1/4, upsilon1=0.001, upsilon2=0.001)

@@ -2,3 +2,7 @@ beta = 0.211 for all time for now (contact number)
 gamma = 1/12 for all time (infection duration in days)
 sigma = 1/4 for all time (incubation duration in days)
 epsilon = 1/365 (immunity loss rate in days)
+
+figure out a sensible algorithm for measuring the wavespeed
+Gillesipse Algorithm
+Typewritter algorithm
