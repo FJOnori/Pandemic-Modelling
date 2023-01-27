@@ -138,9 +138,11 @@ def SIR_VectorField(S_initial, I_inital, beta, gamma):
     
 
     population = S_initial + I_inital
-    x,y = np.meshgrid(np.linspace(1,population,25),np.linspace(1,population,25))
+    x,y = np.meshgrid(np.linspace(1,population,5),np.linspace(1,population,5))
     dS = (-beta*(y/population)*x)
     dI = (beta*(y/population)*x - gamma*y)
+
+    print(y)
 
     plt.quiver(x,y,dS,dI)
     plt.xlabel("Susceptible")
@@ -179,4 +181,5 @@ def beta_calculate(S_initial, E_inital, t_inital, t_final, dt, beta, mu, nu, eps
 #mu => Birth rate
 
 #SEIRS_NumInt(S_initial= 0.99999, E_inital=0.00001, t_inital=0, t_final=1100, dt=0.04, beta=0.211, gamma=1/12, mu=0, nu=0, epsilon=1/365, sigma=1/4)
-SEVIRS_NumInt(S_initial= 67570000, E_inital=1, t_inital=0, t_final=1100, dt=0.04, beta=0.211, gamma=1/12, mu=1/28092, nu=1/29565, epsilon=1/365, sigma=1/4, upsilon1=0.001, upsilon2=0.001)
+#SEVIRS_NumInt(S_initial= 67570000, E_inital=1, t_inital=0, t_final=1100, dt=0.04, beta=0.211, gamma=1/12, mu=1/28092, nu=1/29565, epsilon=1/365, sigma=1/4, upsilon1=0.001, upsilon2=0.001)
+SIR_VectorField(S_initial=1000, I_inital=1, beta=0.4, gamma=0.3)
