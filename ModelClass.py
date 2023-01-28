@@ -2,6 +2,7 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 from time import sleep
+from random import random
 
 class SEIRSV2_Model():
 
@@ -153,8 +154,78 @@ class SEIRSV2_Model():
             
     
 
-    def ASCII_grid(self):
-        simtime = 10
+    def animation_grid_frame(self, sim):
+        
+        newsim = sim.copy()
+        for x in range(len(sim[0])-1):
+            for y in range(len(sim[0])-1):
+
+                if sim[x,y] == "S":
+                    
+                    if (sim[y,x+1] == "E" or sim[y,x-1] == "E" \
+                    or sim[y+1,x] == "E" or sim[y-1,x] == "E" \
+                    or sim[y,x+1] == "I" or sim[y,x-1] == "I" \
+                    or sim[y+1,x] == "I" or sim[y-1,x] == "I") \
+                    and random() < 0.9:
+                        newsim[x,y] = "E"
+                    
+                    elif random() < 0.3:
+                        sim[x,y] == "1"
+                    
+                elif sim[x,y] == "E":
+                    
+                    if random() < 0.5:
+                        newsim[x,y] = "I"
+
+                elif sim[x,y] == "E1":
+                    
+                    if random() < 0.5:
+                        newsim[x,y] = "I1"
+                
+                elif sim[x,y] == "E2":
+                    
+                    if random() < 0.5:
+                        newsim[x,y] = "I2"
+
+                elif sim[x,y] == "I":
+                    
+                    if random() < 0.2:
+                        newsim[x,y] = "R"
+
+                elif sim[x,y] == "I1":
+                    
+                    if random() < 0.2:
+                        newsim[x,y] = "1"
+                
+                elif sim[x,y] == "I2":
+                    
+                    if random() < 0.2:
+                        newsim[x,y] = "2"
+
+                elif sim[x,y] == "R":
+
+                    if random() < 0.05:
+                        newsim[x,y] = "S"
+                    elif random() < 0.3:
+                        newsim[x,y] = "1"
+                
+                elif sim[x,y] == "1":
+
+                    if random() < 0.6:
+                        newsim[x,y] = "2"
+                    elif random() < 0.1:
+                        newsim[x,y] = "E1"
+                
+                elif sim[x,y] == "2":
+
+                    if random() < 0.1:
+                        newsim[x,y] = "E2"
+
+
+        return newsim
+    
+    def animation_grid(self):
+        simtime = 100
         sim = np.array([["*","*","*","*","*","*","*","*","*","*","*","*"],
                         ["*","S","S","S","S","S","S","S","S","S","S","*"],
                         ["*","S","S","S","S","S","S","S","S","S","S","*"],
@@ -167,23 +238,15 @@ class SEIRSV2_Model():
                         ["*","S","S","S","S","S","S","S","S","S","S","*"],
                         ["*","S","S","S","S","S","S","S","S","S","S","*"],
                         ["*","*","*","*","*","*","*","*","*","*","*","*"],])
-
+        
         for j in range(0,simtime):
             print()
             print(str(j))
             print(sim)
-            newsim = sim.copy()
+            sim = self.animation_grid_frame(sim)
 
-            for x in range(len(sim[0])-1):
-                for y in range(len(sim[0])-1):
-                    if sim[x,y] == "S":
-                        if sim[y,x+1] == "E" or sim[y,x-1] == "E" \
-                        or sim[y+1,x] == "E"or sim[y-1,x] == "E":
-
-                            newsim[x][y] = "E"
-
-            sim = newsim
+        
 
 if __name__ == "__main__":
     SEIRSV2 = SEIRSV2_Model()
-    SEIRSV2.LinePlot()
+    SEIRSV2.animation_grid()
