@@ -6,3 +6,59 @@ epsilon = 1/365 (immunity loss rate in days)
 figure out a sensible algorithm for measuring the wavespeed
 Gillesipse Algorithm
 Typewritter algorithm
+
+
+------------------------------
+
+UK pandemic model
+
+BirthRate = 2.78363e-5
+Take the average number of people born per day in 2020 and
+divide it by the population by the end of 2020
+https://www.statista.com/statistics/281296/uk-population/
+https://www.statista.com/statistics/281981/live-births-in-the-united-kingdom-uk/
+
+DeathRate = 2.48321e-5
+Take the average number of people who died and 
+divide by the total population who are not infected.
+We assume that the number of people infected is small
+compared to the total population.
+https://www.ons.gov.uk/peoplepopulationandcommunity/populationandmigration/populationprojections/bulletins/nationalpopulationprojections/2018based
+
+ExposureRate => time dependant
+
+ExposureRateV1+2 = ExposureRate*0.19/0.09
+Based on a CDC study where participants where 
+91% and 81% less likly to catch covid if they
+were vaccinated
+https://www.cdc.gov/media/releases/2021/p0607-mrna-reduce-risks.html
+
+COVIDDeathRate = 8.95027e-3
+Divide the culmative number of deaths
+with the culmative number of cases
+https://ourworldindata.org/covid-deaths?country=~GBR
+
+ImmunityLossRate = 2.73973e-3 = 1/365
+Estimate based on a studies that claim immunity from
+COVID-19 lasts at least 9-12 months
+https://www.thelancet.com/journals/ebiom/article/PIIS2352-3964(22)00584-9/fulltext
+
+InfectionRate = 0.17857 = 1/5.6
+Estimate based on studies that claim that 
+the minimum mean incubation period is 5.6 days
+https://www.sciencedirect.com/science/article/pii/S2254887420301466
+
+RecoveryRate = 1/10 = 0.1
+Esimate based on an aritcle from John Hopkins
+https://www.hopkinsmedicine.org/health/conditions-and-diseases/coronavirus/diagnosed-with-covid-19-what-to-expect
+
+RecoveryRateV1+2 = 0.167 + 0.25 = 1/6 + 1/4
+Esitmate based on reserch by the CDC
+https://www.goodhousekeeping.com/health/a40062545/how-long-does-covid-symptoms-last-vaccinated/
+
+VaccinationRate1+2 => time dependant
+Based on vaccinations downloaded from our world in DeathRate
+https://ourworldindata.org/covid-deaths?country=~GBR
+
+
+

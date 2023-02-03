@@ -8,24 +8,24 @@ class SEIRSV2_Model():
 
     def __init__(self):
         
-        self.T_final = 2000
-        self.S_initial = 65000000
+        self.T_final = len(pd.read_csv("CSVfiles/Vaccine1rate.csv")['vaccination_rate'])
+        self.S_initial = 67508935
         self.E_inital = 1
         self.population = self.S_initial + self.E_inital
 
-        self.ExposureRate = 0.211           #S to E
-        self.ExposureRateV1 = 0.1             #V1 to E
-        self.ExposureRateV2 = 0.05             #V2 to E
-        self.RecoveryRate = 1/12            #I to R
-        self.RecoveryRateV1 = 0.05             #I to V1 
-        self.RecoveryRateV2 = 0.05             #I to V2
-        self.ImmunityLossRate = 1/365       #R to S
-        self.InfectionRate = 1/4            #E to I
-        self.BirthRate = 0.001              #units
-        self.DeathRate = 0.0001             #units
-        self.COVIDDeathRate = 0.001             #units
-        self.VaccinationRate1 = 0.0001           #units
-        self.VaccinationRate2 = 0.0001           #units
+        self.ExposureRate = np.array([0.2]*self.T_final) #np.array(pd.read_csv("CSVfiles/beta.csv")['beta'])
+        self.ExposureRateV1 = self.ExposureRate * 0 #0.19
+        self.ExposureRateV2 = self.ExposureRate * 0 #0.09
+        self.RecoveryRate = 0.1
+        self.RecoveryRateV1 = self.RecoveryRate * 0.19
+        self.RecoveryRateV2 = self.RecoveryRate * 0.09
+        self.ImmunityLossRate = 1/365
+        self.InfectionRate = 0.17857
+        self.BirthRate = 2.78363e-5
+        self.DeathRate = 2.48321e-5
+        self.COVIDDeathRate = 8.95027e-3
+        self.VaccinationRate1 = np.array([0]*self.T_final) #np.array(pd.read_csv("CSVfiles/Vaccine1rate.csv")['vaccination_rate'])
+        self.VaccinationRate2 = np.array([0]*self.T_final) #np.array(pd.read_csv("CSVfiles/Vaccine2rate.csv")['vaccination_rate'])
 
     def NumInt(self):
 
@@ -33,22 +33,22 @@ class SEIRSV2_Model():
 
         for n in np.arange(0, self.T_final):
             
-            dS = (self.BirthRate*self.population) - self.ExposureRate*((I[n] + E[n])/self.population)*S[n] \
-                + self.ImmunityLossRate*R[n] - self.DeathRate*S[n] - self.VaccinationRate1*S[n]
+            dS = (self.BirthRate*self.population) - self.ExposureRate[n]*((I[n] + E[n])/self.population)*S[n] \
+                + self.ImmunityLossRate*R[n] - self.DeathRate*S[n] - self.VaccinationRate1[n]*S[n]
 
-            dE = self.ExposureRate*((I[n] + E[n])/self.population)*S[n] - self.InfectionRate*E[n] - self.DeathRate*E[n] \
-                + self.ExposureRateV1*((I[n] + E[n])/self.population)*V1[n] + self.ExposureRateV2*((I[n] + E[n])/self.population)*V2[n]
+            dE = self.ExposureRate[n]*((I[n] + E[n])/self.population)*S[n] - self.InfectionRate*E[n] - self.DeathRate*E[n] \
+                + self.ExposureRateV1[n]*((I[n] + E[n])/self.population)*V1[n] + self.ExposureRateV2[n]*((I[n] + E[n])/self.population)*V2[n]
 
             dI = self.InfectionRate*E[n] - self.RecoveryRate*I[n] - self.COVIDDeathRate*I[n] \
                 - self.RecoveryRateV1*I[n] - self.RecoveryRateV2*I[n]
 
             dR = self.RecoveryRate*I[n] - self.ImmunityLossRate*R[n] - self.DeathRate*R[n] \
-                 - self.VaccinationRate1*R[n]
+                 - self.VaccinationRate1[n]*R[n]
 
-            dV1 = self.VaccinationRate1*S[n] + self.VaccinationRate1*R[n] - self.VaccinationRate2*V1[n] \
-                 - self.ExposureRateV1*((I[n] + E[n])/self.population)*V1[n] - self.DeathRate*V1[n] + self.RecoveryRateV1*I[n]
+            dV1 = self.VaccinationRate1[n]*S[n] + self.VaccinationRate1[n]*R[n] - self.VaccinationRate2[n]*V1[n] \
+                 - self.ExposureRateV1[n]*((I[n] + E[n])/self.population)*V1[n] - self.DeathRate*V1[n] + self.RecoveryRateV1*I[n]
 
-            dV2 = self.VaccinationRate2*V1[n] - self.DeathRate*V2[n] - self.ExposureRateV2*((I[n] + E[n])/self.population)*V2[n] \
+            dV2 = self.VaccinationRate2[n]*V1[n] - self.DeathRate*V2[n] - self.ExposureRateV2[n]*((I[n] + E[n])/self.population)*V2[n] \
                 + self.RecoveryRateV2*I[n]
 
             COVIDDeaths = self.COVIDDeathRate*I[n]
@@ -64,9 +64,6 @@ class SEIRSV2_Model():
             D.append(COVIDDeaths)     
             T.append(n)
 
-        print("Final Population: ", int(self.population))
-        print("Percentage Vaccinated:",str(100*V2[-1]/self.population) + "%")
-        print("Total Deaths: ", int(D[-1]))
         return S, E, I , R, V1, V2, D, T
 
     def StackPlot(self):
@@ -249,4 +246,4 @@ class SEIRSV2_Model():
 
 if __name__ == "__main__":
     SEIRSV2 = SEIRSV2_Model()
-    SEIRSV2.animation_grid()
+    SEIRSV2.LinePlot()
