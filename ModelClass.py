@@ -1,73 +1,107 @@
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-from time import sleep
 from random import random
 
 class SEIRSV2_Model():
 
     def __init__(self):
         
-        self.T_final = len(pd.read_csv("CSVfiles/Vaccine1rate.csv")['vaccination_rate'])
+        self.T_final = len(np.array(pd.read_csv("CSVfiles/beta.csv")['beta']))
         self.S_initial = 67508935
         self.E_inital = 1
         self.population = self.S_initial + self.E_inital
-
-        self.ExposureRate = np.array([0.2]*self.T_final) #np.array(pd.read_csv("CSVfiles/beta.csv")['beta'])
-        self.ExposureRateV1 = self.ExposureRate * 0 #0.19
-        self.ExposureRateV2 = self.ExposureRate * 0 #0.09
-        self.RecoveryRate = 0.1
-        self.RecoveryRateV1 = self.RecoveryRate * 0.19
-        self.RecoveryRateV2 = self.RecoveryRate * 0.09
+        self.V1rate = np.average(np.trim_zeros(np.array(pd.read_csv("CSVfiles/Vaccine1rate.csv")['vaccination_rate'])))
+        self.V2rate = np.average(np.trim_zeros(np.array(pd.read_csv("CSVfiles/Vaccine2rate.csv")['vaccination_rate'])))
+        self.vaccineDay = 600
+        
+        self.ExposureRate = np.array(pd.read_csv("CSVfiles/beta.csv")['beta'])
+        self.ExposureRateV1 = self.ExposureRate * 0.19
+        self.ExposureRateV2 = self.ExposureRate * 0.09
+        self.RecoveryRate = 1/10
+        self.RecoveryRateV1 = 1/10
+        self.RecoveryRateV2 = 1/10
         self.ImmunityLossRate = 1/365
         self.InfectionRate = 0.17857
         self.BirthRate = 2.78363e-5
         self.DeathRate = 2.48321e-5
         self.COVIDDeathRate = 8.95027e-3
-        self.VaccinationRate1 = np.array([0]*self.T_final) #np.array(pd.read_csv("CSVfiles/Vaccine1rate.csv")['vaccination_rate'])
-        self.VaccinationRate2 = np.array([0]*self.T_final) #np.array(pd.read_csv("CSVfiles/Vaccine2rate.csv")['vaccination_rate'])
+        self.COVIDDeathRate1 = self.COVIDDeathRate * 0.19
+        self.COVIDDeathRate2 = self.COVIDDeathRate * 0.09
+        self.VaccinationRate1 = np.array([0]*(self.vaccineDay) + [self.V1rate]*(self.T_final - self.vaccineDay))
+        self.VaccinationRate2 = np.array([0]*(self.vaccineDay) + [self.V2rate]*(self.T_final - self.vaccineDay))
 
     def NumInt(self):
 
-        S ,I, E ,R, V1, V2, T, D = [self.S_initial], [0], [self.E_inital], [0], [0], [0], [0], [0]
+        S ,I, E ,R, V1, V2, T, E2, E1, I1, I2, D = [self.S_initial], [0], [self.E_inital], [0], [0], [0], [0], [0], [0], [0], [0], [0]
+        totalcases = 0
 
         for n in np.arange(0, self.T_final):
             
-            dS = (self.BirthRate*self.population) - self.ExposureRate[n]*((I[n] + E[n])/self.population)*S[n] \
+            infec = I[n] + E[n] + I1[n] + E1[n] + I2[n] + E2[n]
+
+            dS = (self.BirthRate*self.population) - self.ExposureRate[n]*((infec)/self.population)*S[n] \
                 + self.ImmunityLossRate*R[n] - self.DeathRate*S[n] - self.VaccinationRate1[n]*S[n]
 
-            dE = self.ExposureRate[n]*((I[n] + E[n])/self.population)*S[n] - self.InfectionRate*E[n] - self.DeathRate*E[n] \
-                + self.ExposureRateV1[n]*((I[n] + E[n])/self.population)*V1[n] + self.ExposureRateV2[n]*((I[n] + E[n])/self.population)*V2[n]
+            dE = self.ExposureRate[n]*((infec)/self.population)*S[n] - self.InfectionRate*E[n] - self.DeathRate*E[n] 
 
-            dI = self.InfectionRate*E[n] - self.RecoveryRate*I[n] - self.COVIDDeathRate*I[n] \
-                - self.RecoveryRateV1*I[n] - self.RecoveryRateV2*I[n]
+            dI = self.InfectionRate*E[n] - self.RecoveryRate*I[n] - self.COVIDDeathRate*I[n]
 
             dR = self.RecoveryRate*I[n] - self.ImmunityLossRate*R[n] - self.DeathRate*R[n] \
                  - self.VaccinationRate1[n]*R[n]
 
+            dE1 = self.ExposureRateV1[n]*((infec)/self.population)*V1[n] - self.InfectionRate*E1[n] - self.DeathRate*E1[n]
+
+            dI1 = - self.RecoveryRateV1*I1[n] + self.InfectionRate*E1[n] - self.COVIDDeathRate1*I1[n]
+
+            dE2 = self.ExposureRateV2[n]*((infec)/self.population)*V2[n] - self.InfectionRate*E2[n] - self.DeathRate*E2[n]
+
+            dI2 =  - self.RecoveryRateV2*I2[n] + self.InfectionRate*E2[n] - self.COVIDDeathRate2*I2[n]
+
             dV1 = self.VaccinationRate1[n]*S[n] + self.VaccinationRate1[n]*R[n] - self.VaccinationRate2[n]*V1[n] \
-                 - self.ExposureRateV1[n]*((I[n] + E[n])/self.population)*V1[n] - self.DeathRate*V1[n] + self.RecoveryRateV1*I[n]
+                 - self.ExposureRateV1[n]*((infec)/self.population)*V1[n] - self.DeathRate*V1[n] + self.RecoveryRateV1*I1[n]
 
-            dV2 = self.VaccinationRate2[n]*V1[n] - self.DeathRate*V2[n] - self.ExposureRateV2[n]*((I[n] + E[n])/self.population)*V2[n] \
-                + self.RecoveryRateV2*I[n]
+            dV2 = self.VaccinationRate2[n]*V1[n] - self.DeathRate*V2[n] - self.ExposureRateV2[n]*((infec)/self.population)*V2[n] \
+                + self.RecoveryRateV2*I2[n]
 
-            COVIDDeaths = self.COVIDDeathRate*I[n]
-            self.population += dS + dE + dI + dR + dV1 + dV2
+            COVIDDeaths = self.COVIDDeathRate*I[n] + self.COVIDDeathRate1*I1[n] + self.COVIDDeathRate2*I2[n]
+            totalcases +=  self.ExposureRateV2[n]*((infec)/self.population)*V2[n] + self.ExposureRateV1[n]*((infec)/self.population)*V1[n] + self.ExposureRate[n]*((infec)/self.population)*S[n]
+            self.population += dS + dE + dE1 + dE2 + dI + dI1 + dI2 + dR + dV1 + dV2
 
             S.append(S[n] + dS)
             E.append(E[n] + dE)
+            E1.append(E1[n] + dE1)
+            E2.append(E2[n] + dE2)
             I.append(I[n] + dI)
+            I1.append(I1[n] + dI1)
+            I2.append(I2[n] + dI2)
             R.append(R[n] + dR)
             V1.append(V1[n] + dV1)
             V2.append(V2[n] + dV2)
-
             D.append(COVIDDeaths)     
             T.append(n)
 
-        return S, E, I , R, V1, V2, D, T
+        print("total cases: ", int(totalcases))
+        print("total deaths: ", int(sum(D)))
+        print("vaccinated: ", int((np.array(I1) + np.array(E1) + np.array(V1))[-1]))
+        print("fully vaccinated: ", int((np.array(I2) + np.array(E2) + np.array(V2))[-1]))
+        return  S ,I, E ,R, V1, V2, T, E2, E1, I1, I2, D 
+
+    def LinePlot(self):
+        S ,I, E ,R, V1, V2, T, E2, E1, I1, I2, D = self.NumInt()
+        plt.plot(T, S, label="Susceptible")
+        plt.plot(T, np.array(I)+np.array(I1)+np.array(I2)+np.array(E)+np.array(E1)+np.array(E2), label="Infected")
+        plt.plot(T, R, label="Recovered")
+        plt.plot(T, V2, label="Fully Vaccinated")
+        plt.plot(T, V1, label="Vaccinated")
+        plt.xlabel("Time (Days)")
+        plt.ylabel("Population")
+        plt.title("SEIRSV2 Pandemic model Lineplot")
+        plt.legend()
+        plt.show()
 
     def StackPlot(self):
-        S, E, I, R, V1, V2, D, T = self.NumInt()
+        S ,I, E ,R, V1, V2, T, E2, E1, I1, I2, D = self.NumInt()
         plt.stackplot(T, S, E, I, R, V1, V2,  labels=["Susceptible","Exposed","Infected","Recovered","1st Dose", "2nd Dose"])
         plt.xlabel("Time (Days)")
         plt.ylabel("Population")
@@ -77,22 +111,8 @@ class SEIRSV2_Model():
         plt.legend()
         plt.show()
 
-    def LinePlot(self):
-        S, E, I, R, V1, V2, D, T = self.NumInt()
-        plt.plot(T, S, label="Susceptible")
-        plt.plot(T, E, label="Exposed")
-        plt.plot(T, I, label="Infected")
-        plt.plot(T, R, label="Recovered")
-        plt.plot(T, V1, label="1st Dose")
-        plt.plot(T, V2, label="2nd Dose")
-        plt.xlabel("Time (Days)")
-        plt.ylabel("Population")
-        plt.title("SEIRSV2 Pandemic model Lineplot")
-        plt.legend()
-        plt.show()
-
     def InfectionsPlot(self):
-        S, E, I, R, V1, V2, D, T = self.NumInt()
+        S ,I, E ,R, V1, V2, T, E2, E1, I1, I2, D = self.NumInt()
         plt.plot(T, np.array(E) + np.array(I), label="Infections")
         plt.xlabel("Time (Days)")
         plt.ylabel("Infections from COVID-19")
@@ -100,7 +120,7 @@ class SEIRSV2_Model():
         plt.show()
 
     def DeathsPlot(self):
-        S, E, I, R, V1, V2, D, T = self.NumInt()
+        S ,I, E ,R, V1, V2, T, E2, E1, I1, I2, D = self.NumInt()
         plt.plot(T, D, label="Deaths", c='k')
         plt.xlabel("Time (Days)")
         plt.ylabel("Deaths from COVID-19")
@@ -108,7 +128,7 @@ class SEIRSV2_Model():
         plt.show()
 
     def PieChart(self):
-        S, E, I, R, V1, V2, D, T = self.NumInt()
+        S ,I, E ,R, V1, V2, T, E2, E1, I1, I2, D = self.NumInt()
         data = np.array([S[-1], E[-1], I[-1], R[-1], V1[-1], V2[-1]])
         l = ["Susceptible","Exposed", "Infected", "Recovered", "1st Dose", "2nd Dose"]
         plt.pie(data, labels=l)
@@ -222,7 +242,7 @@ class SEIRSV2_Model():
         return newsim
     
     def animation_grid(self):
-        simtime = 100
+        simtime = 10
         sim = np.array([["*","*","*","*","*","*","*","*","*","*","*","*"],
                         ["*","S","S","S","S","S","S","S","S","S","S","*"],
                         ["*","S","S","S","S","S","S","S","S","S","S","*"],
@@ -236,6 +256,17 @@ class SEIRSV2_Model():
                         ["*","S","S","S","S","S","S","S","S","S","S","*"],
                         ["*","*","*","*","*","*","*","*","*","*","*","*"],])
         
+        colourMap = {"S":"blue",
+                      "E":"orange",
+                      "E1":"orange",
+                      "E2":"orange",
+                      "I":"red",
+                      "I1":"red",
+                      "I2":"red",
+                      "R": "green",
+                      "1": "grey",
+                      "2":"dimgrey"}
+
         for j in range(0,simtime):
             print()
             print(str(j))
