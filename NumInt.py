@@ -184,8 +184,6 @@ def beta_calculate(S_initial, E_inital, t_inital, t_final, dt, beta, mu, nu, eps
     counter = 0
     population = S_initial + E_inital
 
-
-
 def vaccination2_rate_csv():
     df = (pd.read_csv('owid-covid-data-uk.csv')).replace(np.nan, 0)
     vrate = []
@@ -200,11 +198,14 @@ def vaccination2_rate_csv():
 
 def vaccination_rate_plot():
     df = (pd.read_csv('owid-covid-data-uk.csv')).replace(np.nan, 0)
-
-
     plt.plot(list(df['people_vaccinated']))
     plt.plot(list(df['people_fully_vaccinated']))
     plt.show()
 
+def R_number():
+    df = (pd.read_csv('CSVfiles/owid-covid-data-uk.csv')).replace(np.nan, 0)
+    plt.plot(list(df['reproduction_rate']))
+    plt.show()
 
-vaccination_rate_plot()
+R_number()
+
