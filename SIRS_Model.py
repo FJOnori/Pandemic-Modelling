@@ -6,7 +6,9 @@ from random import random, randint
 class SIRS_Model():
 
     def __init__(self) -> None:
-        self.T_final = 1000
+        COVIDdf = (pd.read_csv('CSVfiles/owid-covid-data-uk.csv')).replace(np.nan, 0)
+        
+        self.T_final = len(np.array(COVIDdf['reproduction_rate']))
         self.S_initial = 67508935
         self.I_inital = 1
         self.population = self.S_initial + self.I_inital
@@ -14,9 +16,9 @@ class SIRS_Model():
         self.BirthRate = 2.78363e-5
         self.DeathRate = 2.48321e-5
         self.COVIDDeathRate = 8.95027e-3
-        self.InfectionRate = 0.5
         self.ImmunityLossRate = 1/365
         self.RecoveryRate = 1/4
+        self.InfectionRate = (np.array(COVIDdf['reproduction_rate']))*((1/self.RecoveryRate)/2) - 1
 
 
     def NumInt(self):
@@ -25,31 +27,27 @@ class SIRS_Model():
         
         for n in np.arange(0, self.T_final):
 
-               dS = (self.BirthRate*self.population) - self.InfectionRate*(I[n]/self.population)*S[n] \
+               dS = (self.BirthRate*self.population) - self.InfectionRate[n]*(I[n]/self.population)*S[n] \
                 + self.ImmunityLossRate*R[n] - self.DeathRate*S[n]
 
-               dI = self.InfectionRate*(I[n]/self.population)*S[n] - self.RecoveryRate*I[n] - self.COVIDDeathRate*I[n] 
+               dI = self.InfectionRate[n]*(I[n]/self.population)*S[n] - self.RecoveryRate*I[n] - self.COVIDDeathRate*I[n] 
 
                dR = self.RecoveryRate*I[n] - self.ImmunityLossRate*R[n] - self.DeathRate*R[n]
-
-               dD = self.COVIDDeathRate*I[n] 
 
                self.population += dI + dR + dS
 
                S.append(S[n] + dS)
                I.append(I[n] + dI)
                R.append(R[n] + dR)
-               D.append(dD)
-               T.append(n)
+               D.append(self.COVIDDeathRate*I[n])
 
         return S, I, R, D, T
 
-    
     def LinePlot(self):
         S ,I, R, D, T = self.NumInt()
-        plt.plot(T, S, label="Susceptible")
-        plt.plot(T, I, label="Infected")
-        plt.plot(T, R, label="Recovered")
+        plt.plot(S, label="Susceptible")
+        plt.plot(I, label="Infected")
+        plt.plot(R, label="Recovered")
         plt.xlabel("Time (Days)")
         plt.ylabel("Population")
         plt.title("SIRS Pandemic Model Lineplot")
@@ -92,10 +90,8 @@ class SIRS_Model():
         plt.show()
 
 
-    def VectorFieldSR(self):
+    def VectorFieldSR(self,infected_Slice = 400000,spacing = 25):
         
-        spacing = 25
-        infected_Slice = 400000
         s, r = np.meshgrid(np.linspace(1,self.population,spacing),
                            np.linspace(1,self.population,spacing))
 
@@ -110,10 +106,8 @@ class SIRS_Model():
         plt.title("SIRS Model Vector field")
         plt.show()
 
-    def VectorFieldSI(self):
+    def VectorFieldSI(self, Recovered_Slice = 400000, spacing = 25 ):
         
-        spacing = 25
-        Recovered_Slice = 400000
         s, i = np.meshgrid(np.linspace(1,self.population,spacing),
                             np.linspace(1,self.population,spacing))
 
@@ -130,10 +124,8 @@ class SIRS_Model():
         plt.title("SIRS Model Vector field")
         plt.show()
 
-    def VectorFieldIR(self):
-        
-        spacing = 25
-        Sus_Slice = 400000
+    def VectorFieldIR(self,Sus_Slice = 400000, spacing = 25):
+  
         i, r = np.meshgrid(np.linspace(1,self.population,spacing),
                             np.linspace(1,self.population,spacing))
 
@@ -147,7 +139,7 @@ class SIRS_Model():
         plt.title("SIRS Model Vector field")
         plt.show()
 
-    def animation_grid_frame(self, sim, mtr):
+    def grid_frame(self, sim, mtr):
         
         InfectionRate = 0.1
         RecoveryRate = 0.1
@@ -172,31 +164,46 @@ class SIRS_Model():
 
         return newsim
 
-    def animation_grid(self):
-        simtime = 500
-        S = list()
-        I = list()
-        R = list()
-        T = list()
-        gridsize = 100
-        mtr = 2
-        row = ["*"]*mtr + ["S"]*gridsize + ["*"]*mtr
-        edge = ["*"]*(gridsize+(mtr*2))
-        sim = np.array([edge]*mtr + [row]*gridsize + [edge]*mtr)
+
+    def setup_grid(gridsize=10, max_radius=1):
+        row = ["*"]*max_radius + ["S"]*gridsize + ["*"]*max_radius
+        edge = ["*"]*(gridsize+(max_radius*2))
+        sim = np.array([edge]*max_radius + [row]*gridsize + [edge]*max_radius)
         sim[int(gridsize/2), int(gridsize/2)] = "I"
+        return sim
+
+    def grid_sim(self, simtime = 500, gridsize=10, max_radius=1):
+        S = I = R = T = list()
+        sim = self.setup_grid(gridsize,max_radius)
 
         for j in range(0,simtime):
-            print(j+1)
-            sim = self.animation_grid_frame(sim,mtr)
+            sim = self.grid_frame(sim,max_radius)
             S.append(np.sum(sim == "S"))
             I.append(np.sum(sim == "I"))
             R.append(np.sum(sim == "R"))
-            T.append(j)
 
-        plt.plot(T,S)
-        plt.plot(T,I)
-        plt.plot(T,R)
+        return S,I,R
+
+    def plot_grid_sim(simtime=500, gridsize=10, max_radius=1):
+        S,I,R = self.grid_sim(self, simtime, gridsize, max_radius)
+        plt.plot(S, label = "Suseptable")
+        plt.plot(I, label = "Infectious")
+        plt.plot(R, label = "Recovered")
+        plt.legend()
         plt.show()
+    
+    def print_grid_sim(simtime=500, gridsize=10, max_radius=1):
+
+        sim = self.setup_grid(gridsize,max_radius)
+        for j in range(0,simtime):
+            sim = self.grid_frame(sim,max_radius)
+            print()
+            print(j)
+            print(sim)
+
+    def animate_grid_sim():
+        pass
+
 
 
 if __name__ == "__main__":
