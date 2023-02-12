@@ -7,7 +7,23 @@ figure out a sensible algorithm for measuring the wavespeed
 Gillesipse Algorithm
 Typewritter algorithm
 
+S = 1
+I = 3
+R = 5
+* = 7
 
+  
+        self.T_final = len(np.array(COVIDdf['reproduction_rate']))
+        self.S_initial = 1 - 1/67508935
+        self.I_inital = 1/67508935
+        self.population = self.S_initial + self.I_inital
+       
+        self.BirthRate = 2.78363e-5
+        self.DeathRate = 2.48321e-5
+        self.COVIDDeathRate = 8.95027e-3
+        self.ImmunityLossRate = 1/365
+        self.RecoveryRate = 1/4
+        self.InfectionRate = np.array(COVIDdf['reproduction_rate'])*1/4
 ------------------------------
 
 UK pandemic model

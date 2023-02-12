@@ -204,8 +204,8 @@ def vaccination_rate_plot():
 
 def R_number():
     df = (pd.read_csv('CSVfiles/owid-covid-data-uk.csv')).replace(np.nan, 0)
-    plt.plot(list(df['reproduction_rate']))
-    plt.show()
+    plt.plot(np.array(df['reproduction_rate'])*1/4)
+    
 
 R_number()
 
