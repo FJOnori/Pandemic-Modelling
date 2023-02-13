@@ -1,4 +1,5 @@
 import numpy as np
+import argparse
 import pandas as pd
 import matplotlib.pyplot as plt
 from matplotlib import colors
@@ -130,7 +131,7 @@ class SIRS_Model():
         sim[int(gridsize/2), int(gridsize/2)] = 3
         return sim
 
-    def grid_frame_update(self, sim, max_radius):
+    def grid_frame_update(self, frameNum, sim, max_radius):
         
         tr = randint(1,max_radius)
         dtr = int(tr * (1/np.sqrt(2)))
@@ -151,7 +152,7 @@ class SIRS_Model():
                 elif sim[x,y] == 5:
                     if random() < self.ImmunitylossRateGrid:
                         newsim[x,y] = 1
-
+        
         return newsim
 
     def grid_sim(self, simtime=100, gridsize=10, max_radius=1):
@@ -205,10 +206,16 @@ class SIRS_Model():
         bounds = [0,2,4,6,8]
         norm = colors.BoundaryNorm(bounds, cmap.N)
         sim = self.setup_grid(gridsize, max_radius)
-        
+        updateInterval = 1
+
+
         fig, ax = plt.subplots()
         img = ax.imshow(sim, interpolation='nearest', cmap=cmap)
-        ani = animation.FuncAnimation(img, self.grid_frame_update,fargs=(sim, max_radius,), interval=10,frames = simtime, repeat=True)
+        ani = animation.FuncAnimation(fig, self.grid_frame_update, fargs=(sim, gridsize, ),
+								frames = 100,
+								interval=updateInterval,
+								save_count=50)
+
         
         plt.tick_params(bottom=False, top=False, left=False, right=False, labelbottom=False, labelleft=False)
         plt.show()
