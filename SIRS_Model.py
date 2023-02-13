@@ -2,6 +2,7 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 from matplotlib import colors
+import matplotlib.animation as animation
 from random import random, randint
 
 class SIRS_Model():
@@ -21,6 +22,9 @@ class SIRS_Model():
         self.RecoveryRate = 1/4
         self.InfectionRate = np.array(COVIDdf['reproduction_rate'])*1/4
 
+        self.InfectionRateGrid = 0.6
+        self.RecoveryRateGrid = 0.1
+        self.ImmunitylossRateGrid = 0.05
 
     def NumInt(self):
 
@@ -57,7 +61,7 @@ class SIRS_Model():
 
     def StackPlot(self):
         S ,I, R, D = self.NumInt()
-        plt.stackplot(T, S, I, R, labels=["Susceptible","Infected","Recovered"])
+        plt.stackplot(range(0,len(S)), S, I, R, labels=["Susceptible","Infected","Recovered"])
         plt.xlabel("Time (Days)")
         plt.ylabel("Population")
         plt.xlim(0,self.T_final)
@@ -90,25 +94,27 @@ class SIRS_Model():
         plt.title("SIRS Pandemic Final State")
         plt.show()
 
-    def VectorField(self, Slice = 0.1, axis="IS", time= 800, spacing = 25):
+    def VectorField(self, axis="IS", time= 800, spacing = 25):
         
         x, y = np.meshgrid(np.linspace(0,self.population,spacing),
                            np.linspace(0,self.population,spacing))
 
+        S ,I, R, D = self.NumInt()
+
         if axis == "SR":
-            dS = (self.BirthRate*self.population) - self.InfectionRate[time]*(Slice/self.population)*x + self.ImmunityLossRate*y- self.DeathRate*x
-            dR = self.RecoveryRate*Slice - self.ImmunityLossRate*y - self.DeathRate*y
+            dS = (self.BirthRate*self.population) - self.InfectionRate[time]*(I[time]/self.population)*x + self.ImmunityLossRate*y- self.DeathRate*x
+            dR = self.RecoveryRate*I[time] - self.ImmunityLossRate*y - self.DeathRate*y
             plt.quiver(x,y,dS,dR)
             plt.xlabel("Susceptible")
             plt.ylabel("Recovered")
         elif axis == "IR":
-            dI = self.InfectionRate[time]*(x/self.population)*Slice - self.RecoveryRate*x - self.COVIDDeathRate*x 
+            dI = self.InfectionRate[time]*(x/self.population)*S[time] - self.RecoveryRate*x - self.COVIDDeathRate*x 
             dR = self.RecoveryRate*x - self.ImmunityLossRate*y - self.DeathRate*y
             plt.quiver(x,y,dI,dR)
             plt.xlabel("Infected")
             plt.ylabel("Recovered")
         elif axis == "IS":
-            dS = (self.BirthRate*self.population) - self.InfectionRate[time]*(x/self.population)*y + self.ImmunityLossRate*Slice - self.DeathRate*y
+            dS = (self.BirthRate*self.population) - self.InfectionRate[time]*(x/self.population)*y + self.ImmunityLossRate*R[time] - self.DeathRate*y
             dI = self.InfectionRate[time]*(x/self.population)*y - self.RecoveryRate*x - self.COVIDDeathRate*x
             plt.quiver(x,y,dI,dS)
             plt.xlabel("Infected")
@@ -124,11 +130,8 @@ class SIRS_Model():
         sim[int(gridsize/2), int(gridsize/2)] = 3
         return sim
 
-    def grid_frame(self, sim, max_radius):
+    def grid_frame_update(self, sim, max_radius):
         
-        InfectionRate = 0.6
-        RecoveryRate = 0.1
-        ImmunitylossRate = 0.05
         tr = randint(1,max_radius)
         dtr = int(tr * (1/np.sqrt(2)))
 
@@ -140,32 +143,45 @@ class SIRS_Model():
                     or sim[y+tr,x] == 3 or sim[y-tr,x] == 3 \
                     or sim[y-dtr,x+dtr] == 3 or sim[y+dtr,x-dtr] == 3 \
                     or sim[y-dtr,x-dtr] == 3 or sim[y+dtr,x+dtr] == 3) \
-                    and random() < InfectionRate:
+                    and random() < self.InfectionRateGrid:
                         newsim[x,y] = 3
                 elif sim[x,y] == 3:
-                    if random() < RecoveryRate:
+                    if random() < self.RecoveryRateGrid:
                         newsim[x,y] = 5
                 elif sim[x,y] == 5:
-                    if random() < ImmunitylossRate:
+                    if random() < self.ImmunitylossRateGrid:
                         newsim[x,y] = 1
 
         return newsim
-
-
 
     def grid_sim(self, simtime=100, gridsize=10, max_radius=1):
         S = I = R = []
         sim = self.setup_grid(gridsize,max_radius)
         for j in range(0,simtime):
-            sim = self.grid_frame(sim,max_radius)
+            sim = self.grid_frame_update(sim,max_radius)
             S.append(np.sum(sim == 1))
             I.append(np.sum(sim == 3))
             R.append(np.sum(sim == 5))
 
-        return S,I,R
+        return S,I,R,sim
+
+    def calculate_infection_speed_grid(self, simtime=100, gridsize=10, max_radius=1):
+
+        S,I,R,sim = self.grid_sim(simtime, gridsize, max_radius)
+        startpos = [int(gridsize/2), int(gridsize/2)]
+        furthest_infection = startpos
+
+        for x in range(len(sim[0])-max_radius):
+            for y in range(len(sim[0])-max_radius):
+                if sim[x,y] == 3 and ((x-startpos[0])**2 + (y-startpos[1])**2) > np.linalg.norm(furthest_infection):
+                    furthest_infection = np.array([x,y])
+
+        infection_speed = np.linalg.norm(furthest_infection-startpos)/simtime
+        return infection_speed
+
 
     def plot_grid_sim(self, simtime=100, gridsize=10, max_radius=1):
-        S,I,R = self.grid_sim(simtime, gridsize, max_radius)
+        S,I,R,sim = self.grid_sim(simtime, gridsize, max_radius)
         plt.plot(S, label = "Susceptible")
         plt.plot(I, label = "Infectious")
         plt.plot(R, label = "Recovered")
@@ -176,7 +192,7 @@ class SIRS_Model():
         plt.show()
     
     def stackplot_grid_sim(self, simtime=100, gridsize=10, max_radius=1):
-        S,I,R = self.grid_sim(simtime, gridsize, max_radius)
+        S,I,R,sim = self.grid_sim(simtime, gridsize, max_radius)
         plt.stackplot(range(0,len(S)), S, I, R,  labels=["Susceptible","Infected","Recovered"])
         plt.title("SIRS Pandemic Grid Model")
         plt.xlabel("Time(days)")
@@ -184,26 +200,20 @@ class SIRS_Model():
         plt.legend()
         plt.show()
     
-    def print_grid_sim(self, simtime=100, gridsize=10, max_radius=1):
-        sim = self.setup_grid(gridsize, max_radius)
-        for j in range(0,simtime):
-            print()
-            print(j)
-            print(sim)
-            sim = self.grid_frame(sim, max_radius)
-
     def animate_grid_sim(self,simtime=100,gridsize=100,max_radius=1):
         cmap = colors.ListedColormap(['steelblue','crimson','silver','black'])
         bounds = [0,2,4,6,8]
         norm = colors.BoundaryNorm(bounds, cmap.N)
         sim = self.setup_grid(gridsize, max_radius)
         
-        for n in range(0, simtime):
-            plt.imshow(sim, cmap=cmap, norm=norm)
-            plt.tick_params(bottom=False, top=False, left=False, right=False, labelbottom=False, labelleft=False)
-            plt.savefig("SIRS_gridframes/frame"+str(n)+".png")
-            sim = self.grid_frame(sim, max_radius)
+        fig, ax = plt.subplots()
+        img = ax.imshow(sim, interpolation='nearest', cmap=cmap)
+        ani = animation.FuncAnimation(img, self.grid_frame_update,fargs=(sim, max_radius,), interval=10,frames = simtime, repeat=True)
+        
+        plt.tick_params(bottom=False, top=False, left=False, right=False, labelbottom=False, labelleft=False)
+        plt.show()
+        
 
 if __name__ == "__main__":
     SIRS = SIRS_Model()
-    SIRS.InfectionsPlot()
+    SIRS.animate_grid_sim()
