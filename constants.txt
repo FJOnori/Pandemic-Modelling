@@ -25,6 +25,7 @@ R = 5
         self.RecoveryRate = 1/4
         self.InfectionRate = np.array(COVIDdf['reproduction_rate'])*1/4
 ------------------------------
+ons
 
 UK pandemic model
 

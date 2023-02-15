@@ -20,8 +20,8 @@ class SIRS_Model():
         self.DeathRate = 2.48321e-5
         self.COVIDDeathRate = 8.95027e-3
         self.ImmunityLossRate = 1/210
-        self.RecoveryRate = 1/4
-        self.InfectionRate = np.array(COVIDdf['reproduction_rate'])*1/4
+        self.RecoveryRate = 1/5
+        self.InfectionRate = np.array(COVIDdf['reproduction_rate'])*self.RecoveryRate
 
         self.InfectionRateGrid = 0.6
         self.RecoveryRateGrid = 0.1
@@ -54,6 +54,7 @@ class SIRS_Model():
         plt.plot(S, label="Susceptible")
         plt.plot(I, label="Infected")
         plt.plot(R, label="Recovered")
+        plt.plot(np.array(S)+np.array(I)+np.array(R), label="total")
         plt.xlabel("Time (Days)")
         plt.ylabel("Population")
         plt.title("SIRS Pandemic Model Lineplot")
@@ -95,7 +96,7 @@ class SIRS_Model():
         plt.title("SIRS Pandemic Final State")
         plt.show()
 
-    def VectorField(self, axis="IS", time= 800, spacing = 25):
+    def VectorField(self, axis="IS", time= 400, spacing = 25):
         
         x, y = np.meshgrid(np.linspace(0,self.population,spacing),
                            np.linspace(0,self.population,spacing))
@@ -223,4 +224,5 @@ class SIRS_Model():
 
 if __name__ == "__main__":
     SIRS = SIRS_Model()
-    SIRS.animate_grid_sim()
+    SIRS.InfectionsPlot()
+    
