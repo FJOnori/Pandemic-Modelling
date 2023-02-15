@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 
-def SIR_NumInt(S_initial, I_inital, t_inital, t_final, dt, beta, gamma):
+def SIR_NumInt(S_initial, I_inital, t_inital, t_final, dt, beta, gamma, nu):
     
     S ,I ,R, T = [S_initial], [I_inital], [0], [t_inital]
     counter = 0
@@ -10,9 +10,9 @@ def SIR_NumInt(S_initial, I_inital, t_inital, t_final, dt, beta, gamma):
 
     for t in np.arange(t_inital, t_final, dt):
         
-        dS = (-beta*(I[counter]/population)*S[counter]) * dt
+        dS = (-beta*(I[counter]/population)*S[counter] + nu*R[counter]) * dt
         dI = (beta*(I[counter]/population)*S[counter] - gamma*I[counter]) * dt
-        dR = (gamma*I[counter]) * dt
+        dR = (gamma*I[counter] - nu*R[counter]) * dt
         
         S.append(S[counter] + dS)
         I.append(I[counter] + dI)
@@ -25,11 +25,11 @@ def SIR_NumInt(S_initial, I_inital, t_inital, t_final, dt, beta, gamma):
     plt.plot(T, np.array(R)*100, label="Recovered", c="#757575")
     plt.xlabel("Time (days)")
     plt.ylabel("Percentage of Population")
-    plt.title("SIR Pandemic model")
+    plt.title("SIRS Pandemic model")
     plt.xlim(t_inital,t_final)
     plt.ylim(0, 100)
     plt.legend()
-    plt.savefig("SIR2.png", dpi=227)
+    plt.savefig("SIRS2.png", dpi=227)
 
 def SIS_NumInt(S_initial, I_inital, t_inital, t_final, dt, beta, gamma):
     
@@ -207,5 +207,5 @@ def R_number():
     plt.plot(np.array(df['reproduction_rate'])*1/4)
     
 
-SIR_NumInt(S_initial=1-0.0001, I_inital=0.0001, t_inital=0, t_final=1000, dt=1, beta=0.1, gamma=0.05)
+SIR_NumInt(S_initial=1-0.0001, I_inital=0.0001, t_inital=0, t_final=1000, dt=1, beta=0.1, gamma=0.05, nu=0.01)
 
