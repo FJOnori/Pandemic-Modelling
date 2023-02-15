@@ -20,16 +20,16 @@ def SIR_NumInt(S_initial, I_inital, t_inital, t_final, dt, beta, gamma):
         T.append(t+dt)
         counter += 1
 
-    plt.plot(T, S, label="Susceptible")
-    plt.plot(T, I, label="Infected")
-    plt.plot(T, R, label="Recovered")
-    plt.xlabel("Time")
-    plt.ylabel("Population")
+    plt.plot(T, np.array(S)*100, label="Susceptible", c="#1d6bc4")
+    plt.plot(T, np.array(I)*100, label="Infected", c="#c41d1d")
+    plt.plot(T, np.array(R)*100, label="Recovered", c="#757575")
+    plt.xlabel("Time (days)")
+    plt.ylabel("Percentage of Population")
     plt.title("SIR Pandemic model")
     plt.xlim(t_inital,t_final)
-    plt.ylim(0, 1200)
+    plt.ylim(0, 100)
     plt.legend()
-    plt.show()
+    plt.savefig("SIR2.png", dpi=227)
 
 def SIS_NumInt(S_initial, I_inital, t_inital, t_final, dt, beta, gamma):
     
@@ -207,5 +207,5 @@ def R_number():
     plt.plot(np.array(df['reproduction_rate'])*1/4)
     
 
-R_number()
+SIR_NumInt(S_initial=1-0.0001, I_inital=0.0001, t_inital=0, t_final=1000, dt=1, beta=0.1, gamma=0.05)
 
