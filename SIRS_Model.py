@@ -151,6 +151,11 @@ class SIRS_Model():
             dR = self.RecoveryRate*y - self.ImmunityLossRate*z - self.DeathRate*z
 
             ax.quiver(x,y,z,dS,dI,dR)
+            ax.set_title("Proportion of initial population in each compartment")
+            ax.set_xlabel('Susceptible')
+            ax.set_ylabel('Infected')
+            ax.set_zlabel('Recovered')
+            plt.savefig("ReportImgs/VectorfieldSIR_SIRS.png",dpi=227)
             plt.show()
 
       
