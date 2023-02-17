@@ -11,17 +11,17 @@ class SIRS_Model():
     def __init__(self) -> None:
         COVIDdf = (pd.read_csv('CSVfiles/owid-covid-data-uk.csv')).replace(np.nan, 0)
         
-        self.T_final = len(np.array(COVIDdf['reproduction_rate']))
+        self.T_final = 365*5
         self.S_initial = 1 - 0.00001
         self.I_inital = 0.00001
         self.population = self.S_initial + self.I_inital
        
         self.BirthRate = 2.78363e-5
         self.DeathRate = 2.48321e-5
-        self.COVIDDeathRate = 8.95027e-3
+        self.COVIDDeathRate = 8.95027e-4
         self.ImmunityLossRate = 1/210
-        self.RecoveryRate = 1/5
-        self.InfectionRate = np.array(COVIDdf['reproduction_rate'])*self.RecoveryRate
+        self.RecoveryRate = 1/10
+        self.InfectionRate = 0.19
 
         self.InfectionRateGrid = 0.6
         self.RecoveryRateGrid = 0.1
@@ -33,10 +33,10 @@ class SIRS_Model():
         
         for n in np.arange(0, self.T_final):
 
-               dS = (self.BirthRate*self.population) - self.InfectionRate[n]*(I[n]/self.population)*S[n] \
+               dS = (self.BirthRate*self.population) - self.InfectionRate*(I[n]/self.population)*S[n] \
                 + self.ImmunityLossRate*R[n] - self.DeathRate*S[n]
 
-               dI = self.InfectionRate[n]*(I[n]/self.population)*S[n] - self.RecoveryRate*I[n] - self.COVIDDeathRate*I[n] 
+               dI = self.InfectionRate*(I[n]/self.population)*S[n] - self.RecoveryRate*I[n] - self.COVIDDeathRate*I[n] 
 
                dR = self.RecoveryRate*I[n] - self.ImmunityLossRate*R[n] - self.DeathRate*R[n]
 
@@ -51,19 +51,20 @@ class SIRS_Model():
 
     def LinePlot(self):
         S ,I, R, D = self.NumInt()
-        plt.plot(S, label="Susceptible")
-        plt.plot(I, label="Infected")
-        plt.plot(R, label="Recovered")
-        plt.plot(np.array(S)+np.array(I)+np.array(R), label="total")
+        plt.plot(np.array(S)*100, label="Susceptible", c="#1d6bc4")
+        plt.plot(np.array(I)*100, label="Infected", c="#c41d1d")
+        plt.plot(np.array(R)*100, label="Recovered", c="#757575")
         plt.xlabel("Time (Days)")
-        plt.ylabel("Population")
-        plt.title("SIRS Pandemic Model Lineplot")
+        plt.ylabel("Percentage of Population")
+        plt.title("SIRS Pandemic Model")
+        plt.ylim(0,100)
+        plt.xlim(0,self.T_final)
         plt.legend()
-        plt.show()
+        plt.savefig("ReportImgs/SIRS.png", dpi=227)
 
     def StackPlot(self):
         S ,I, R, D = self.NumInt()
-        plt.stackplot(range(0,len(S)), S, I, R, labels=["Susceptible","Infected","Recovered"])
+        plt.stackplot(range(0,len(S)), S, I, R, labels=["Susceptible","Infected","Recovered"], colors=["#1d6bc4","#c41d1d","#757575"])
         plt.xlabel("Time (Days)")
         plt.ylabel("Population")
         plt.xlim(0,self.T_final)
@@ -85,18 +86,18 @@ class SIRS_Model():
         plt.plot(D, label="Deaths", c='k')
         plt.xlabel("Time (Days)")
         plt.ylabel("Deaths from COVID-19")
-        plt.title("SIRS Pandemic model Deaths")
+        plt.title("SIRS Deaths")
         plt.show()
 
     def PieChart(self):
         S ,I, R, D = self.NumInt()
         data = np.array([S[-1], I[-1], R[-1]])
         l = ["Susceptible", "Infected", "Recovered"]
-        plt.pie(data, labels=l)
+        plt.pie(data, labels=l, colors=["#1d6bc4","#c41d1d","#757575"])
         plt.title("SIRS Pandemic Final State")
-        plt.show()
+        plt.savefig("ReportImgs/SIRS_PieChart",dpi=227)
 
-    def VectorField(self, axis="IS", time= 400, spacing = 25):
+    def VectorField(self, axis="SIR", time= 400, spacing = 8):
         
         x, y = np.meshgrid(np.linspace(0,self.population,spacing),
                            np.linspace(0,self.population,spacing))
@@ -104,26 +105,55 @@ class SIRS_Model():
         S ,I, R, D = self.NumInt()
 
         if axis == "SR":
-            dS = (self.BirthRate*self.population) - self.InfectionRate[time]*(I[time]/self.population)*x + self.ImmunityLossRate*y- self.DeathRate*x
+            dS = (self.BirthRate*self.population) - self.InfectionRate*(I[time]/self.population)*x + self.ImmunityLossRate*y- self.DeathRate*x
             dR = self.RecoveryRate*I[time] - self.ImmunityLossRate*y - self.DeathRate*y
-            plt.quiver(x,y,dS,dR)
+            color = 2 * np.log(np.hypot(dS, dR))
+            plt.streamplot(x,y,dS,dR,color=color, linewidth=1,cmap="Blues",density=1.5, arrowstyle='->', arrowsize=1.5)
             plt.xlabel("Susceptible")
             plt.ylabel("Recovered")
+            plt.title("SIRS Vectorfield")
+            plt.xlim(0,1)
+            plt.ylim(0,1)
+            plt.savefig("ReportImgs/VectorfieldSR_SIRS.png",dpi=227)
         elif axis == "IR":
-            dI = self.InfectionRate[time]*(x/self.population)*S[time] - self.RecoveryRate*x - self.COVIDDeathRate*x 
+            dI = self.InfectionRate*(x/self.population)*S[time] - self.RecoveryRate*x - self.COVIDDeathRate*x 
             dR = self.RecoveryRate*x - self.ImmunityLossRate*y - self.DeathRate*y
-            plt.quiver(x,y,dI,dR)
+            color = 2 * np.log(np.hypot(dI, dR))
+            plt.streamplot(x,y,dI,dR,color=color, linewidth=1,cmap="Blues",density=1.5, arrowstyle='->', arrowsize=1.5)
+            plt.title("SIRS Vectorfield")
+            plt.xlim(0,1)
+            plt.ylim(0,1)
             plt.xlabel("Infected")
             plt.ylabel("Recovered")
+            plt.savefig("ReportImgs/VectorfieldIR_SIRS.png",dpi=227)
         elif axis == "IS":
-            dS = (self.BirthRate*self.population) - self.InfectionRate[time]*(x/self.population)*y + self.ImmunityLossRate*R[time] - self.DeathRate*y
-            dI = self.InfectionRate[time]*(x/self.population)*y - self.RecoveryRate*x - self.COVIDDeathRate*x
-            plt.quiver(x,y,dI,dS)
+            dS = (self.BirthRate*self.population) - self.InfectionRate*(x/self.population)*y + self.ImmunityLossRate*R[time] - self.DeathRate*y
+            dI = self.InfectionRate*(x/self.population)*y - self.RecoveryRate*x - self.COVIDDeathRate*x
+            color = 2 * np.log(np.hypot(dS, dI))
+            plt.streamplot(x,y,dS,dI,color=color, linewidth=1,cmap="Blues",density=1.5, arrowstyle='->', arrowsize=1.5)
+            plt.title("SIRS Vectorfield")
             plt.xlabel("Infected")
             plt.ylabel("Susceptible")
-            
-        plt.title("SIRS Model Vector field")
-        plt.show()
+            plt.xlim(0,1)
+            plt.ylim(0,1)
+            plt.savefig("ReportImgs/VectorfieldIS_SIRS.png",dpi=227)
+        
+        elif axis == "SIR":
+
+            fig = plt.figure()
+            ax = fig.gca(projection='3d')
+            x, y, z = np.meshgrid(np.linspace(0,self.population,spacing),
+                                  np.linspace(0,self.population,spacing),
+                                  np.linspace(0,self.population,spacing))
+
+            dS = (self.BirthRate*self.population) - self.InfectionRate*(y/self.population)*x + self.ImmunityLossRate*z - self.DeathRate*x
+            dI = self.InfectionRate*(y/self.population)*x - self.RecoveryRate*y - self.COVIDDeathRate*y
+            dR = self.RecoveryRate*y - self.ImmunityLossRate*z - self.DeathRate*z
+
+            ax.quiver(x,y,z,dS,dI,dR)
+            plt.show()
+
+      
 
     def setup_grid(self, gridsize=10, max_radius=1):
         row = [7]*max_radius + [1]*gridsize + [7]*max_radius
@@ -224,5 +254,5 @@ class SIRS_Model():
 
 if __name__ == "__main__":
     SIRS = SIRS_Model()
-    SIRS.InfectionsPlot()
+    SIRS.VectorField()
     
