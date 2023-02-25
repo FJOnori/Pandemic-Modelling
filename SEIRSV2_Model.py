@@ -6,7 +6,7 @@ from random import random
 class SEIRSV2_Model():
 
     def __init__(self):
-        
+    
         self.T_final = len(np.array(pd.read_csv("CSVfiles/beta.csv")['beta']))
         self.S_initial = 67508935
         self.E_inital = 1
@@ -153,7 +153,6 @@ class SEIRSV2_Model():
         plt.title("SEIRSV2 vector field")
         plt.show()
 
-
     def ASCII_line(self):
         simtime = 10
         sim = np.array(["*","S","S","S","S","S","E","S","S","S","S","*"])
@@ -169,8 +168,6 @@ class SEIRSV2_Model():
 
             sim = newsim
             
-    
-
     def animation_grid_frame(self, sim):
         
         newsim = sim.copy()

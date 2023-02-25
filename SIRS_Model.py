@@ -32,7 +32,7 @@ class SIRS_Model():
 
         S ,I, R, D = [self.S_initial], [self.I_inital], [0], [0]
 
-        if TD:beta = self.TDInfectionRate 
+        if TD: beta = self.TDInfectionRate 
         else: beta = np.array([self.InfectionRate]*len(self.TDInfectionRate))
 
         for n in np.arange(0, len(self.TDInfectionRate)):
@@ -207,21 +207,31 @@ class SIRS_Model():
             pass
 
     def setup_grid(self, gridsize=10, max_radius=1):
+        #defines a standard row of the grid
         row = [7]*max_radius + [1]*gridsize + [7]*max_radius
+        #defines a top and bottom edge of the grid
         edge = [7]*(gridsize+(max_radius*2))
+        #concatinates rows and edges based on gridsize and max_radius
         sim = np.array([edge]*max_radius + [row]*gridsize + [edge]*max_radius)
-        sim[int(gridsize/2), int(gridsize/2)] = 3
+        #places a single infected individual in the middle of the grid
+        centre = int((gridsize+(max_radius*2))/2)
+        sim[centre, centre] = 3
+
         return sim
 
-    def grid_frame_update(self, frameNum, sim, max_radius):
+    def grid_frame_update(self, sim):
         
+        max_radius = list(sim).count(list(sim)[0])/2
+        print(max_radius)
         tr = randint(1,max_radius)
         dtr = int(tr * (1/np.sqrt(2)))
 
         newsim = sim.copy()
         for x in range(len(sim[0])-max_radius):
-            for y in range(len(sim[0])-max_radius):                
-                if sim[x,y] == 1:
+            for y in range(len(sim[0])-max_radius):
+                if sim[x,y] == 7:
+                    pass                
+                elif sim[x,y] == 1:
                     if (sim[y,x+tr] == 3 or sim[y,x-tr] == 3 \
                     or sim[y+tr,x] == 3 or sim[y-tr,x] == 3 \
                     or sim[y-dtr,x+dtr] == 3 or sim[y+dtr,x-dtr] == 3 \
@@ -237,11 +247,13 @@ class SIRS_Model():
         
         return newsim
 
-    def grid_sim(self, simtime=100, gridsize=10, max_radius=1):
+    def grid_sim(self, simtime=10, gridsize=10, max_radius=1):
         S = I = R = []
         sim = self.setup_grid(gridsize,max_radius)
         for j in range(0,simtime):
-            sim = self.grid_frame_update(sim,max_radius)
+            sim = self.grid_frame_update(sim)
+            print(j)
+            print(sim)
             S.append(np.sum(sim == 1))
             I.append(np.sum(sim == 3))
             R.append(np.sum(sim == 5))
@@ -301,8 +313,8 @@ class SIRS_Model():
         plt.tick_params(bottom=False, top=False, left=False, right=False, labelbottom=False, labelleft=False)
         plt.show()
         
-
 if __name__ == "__main__":
     SIRS = SIRS_Model()
-    SIRS.DeathsPlot()
+    SIRS.grid_sim()
+
     
