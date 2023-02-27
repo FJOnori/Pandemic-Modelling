@@ -1,277 +1,98 @@
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-from random import random
 
 class SEIRSV2_Model():
 
     def __init__(self):
-    
-        self.T_final = len(np.array(pd.read_csv("CSVfiles/beta.csv")['beta']))
-        self.S_initial = 67508935
-        self.E_inital = 1
-        self.population = self.S_initial + self.E_inital
-        self.V1rate = np.average(np.trim_zeros(np.array(pd.read_csv("CSVfiles/Vaccine1rate.csv")['vaccination_rate'])))
-        self.V2rate = np.average(np.trim_zeros(np.array(pd.read_csv("CSVfiles/Vaccine2rate.csv")['vaccination_rate'])))
-        self.vaccineDay = 600
+
+        COVIDdf = (pd.read_csv('CSVfiles/owid-covid-data-uk.csv')).replace(np.nan, 0)
+
+        #General Coefficients
+        self.Population             = 1
+        self.InitialExposures       = 0.0000056
+        self.PopulationHR           = 0
+        self.VaccineDay             = 0
+        self.BirthRate              = 2.78363e-5 
+        self.DeathRate              = 2.48321e-5
         
-        self.ExposureRate = np.array(pd.read_csv("CSVfiles/beta.csv")['beta'])
-        self.ExposureRateV1 = self.ExposureRate * 0.19
-        self.ExposureRateV2 = self.ExposureRate * 0.09
-        self.RecoveryRate = 1/10
-        self.RecoveryRateV1 = 1/10
-        self.RecoveryRateV2 = 1/10
-        self.ImmunityLossRate = 1/365
-        self.InfectionRate = 0.17857
-        self.BirthRate = 2.78363e-5
-        self.DeathRate = 2.48321e-5
-        self.COVIDDeathRate = 8.95027e-3
-        self.COVIDDeathRate1 = self.COVIDDeathRate * 0.19
-        self.COVIDDeathRate2 = self.COVIDDeathRate * 0.09
-        self.VaccinationRate1 = np.array([0]*(self.vaccineDay) + [self.V1rate]*(self.T_final - self.vaccineDay))
-        self.VaccinationRate2 = np.array([0]*(self.vaccineDay) + [self.V2rate]*(self.T_final - self.vaccineDay))
+        #Pandemic Coefficients
+        self.InfectionRate          = 0.19
+        self.RecoveryRate           = 1/10
+        self.ImmunityLossRate       = 1/210
+        self.ContactRateS           = (self.RecoveryRate)*np.array(COVIDdf['reproduction_rate'][30:1030])
+        self.ContactRateSV          =  self.ContactRateS * 0.19
+        self.ContactRateDV          =  self.ContactRateS * 0.09
+        self.ContactRateSHR         = (self.RecoveryRate)*np.array(COVIDdf['reproduction_rate'][30:1030]) * 2
+        self.ContactRateSVHR        =  self.ContactRateSHR * 0.19
+        self.ContactRateDVHR        =  self.ContactRateSHR * 0.09
+        self.VaccinationRateS       = 0
+        self.VaccinationRateSV      = 0
+        self.VaccinationRateSHR     = 0
+        self.VaccinationRateSVHR    = 0
+        self.DeathRateCOVID         = 8.95027e-4
+        self.DeathRateCOVIDHR       = self.DeathRateCOVID * 2
+        self.DeathRateCOVIDSV       = self.DeathRateCOVID * 0.19
+        self.DeathRateCOVIDDV       = self.DeathRateCOVID * 0.09
+        self.DeathRateCOVIDSVHR     = self.DeathRateCOVIDHR * 0.19
+        self.DeathRateCOVIDDVHR     = self.DeathRateCOVIDHR * 0.09
 
     def NumInt(self):
 
-        S ,I, E ,R, V1, V2, T, E2, E1, I1, I2, D = [self.S_initial], [0], [self.E_inital], [0], [0], [0], [0], [0], [0], [0], [0], [0]
-        totalcases = 0
+        S = [self.Population - self.InitialExposures]; E = [self.InitialExposures]; I = [0]; R = [0]
+        SV  = [0]; SVE = [0]; SVI = [0]
+        DV  = [0]; DVE = [0]; DVI = [0]
+        SHR = [self.PopulationHR]; EHR = [0]; IHR = [0]; RHR = [0]
+        SVHR = [0]; SVEHR = [0]; SVIHR = [0]
+        DVHR = [0]; DVEHR = [0]; DVIHR = [0]
 
-        for n in np.arange(0, self.T_final):
-            
-            infec = I[n] + E[n] + I1[n] + E1[n] + I2[n] + E2[n]
+        for n in np.arange(0, 1000):
 
-            dS = (self.BirthRate*self.population) - self.ExposureRate[n]*((infec)/self.population)*S[n] \
-                + self.ImmunityLossRate*R[n] - self.DeathRate*S[n] - self.VaccinationRate1[n]*S[n]
+            C = I[n] + E[n] + SVI[n] + SVE[n] + DVI[n] + DVE[n] + EHR[n] + IHR[n] + SVIHR[n] + SVEHR[n] + DVEHR[n] + DVIHR[n] 
 
-            dE = self.ExposureRate[n]*((infec)/self.population)*S[n] - self.InfectionRate*E[n] - self.DeathRate*E[n] 
+            dS      = self.BirthRate*self.Population - self.ContactRateS[n]*(C/self.Population)*S[n] + self.ImmunityLossRate*R[n] - self.VaccinationRateS*S[n]  - self.DeathRate*S[n] 
+            dE      = self.ContactRateS[n]*(C/self.Population)*S[n] - self.InfectionRate*E[n] - self.DeathRate*E[n] 
+            dI      = self.InfectionRate*E[n] - self.RecoveryRate*I[n] - self.DeathRateCOVID*I[n]
+            dR      = self.RecoveryRate*I[n] - self.VaccinationRateS*R[n] - self.ImmunityLossRate*R[n] - self.DeathRate*R[n]
 
-            dI = self.InfectionRate*E[n] - self.RecoveryRate*I[n] - self.COVIDDeathRate*I[n]
+            dSV     = self.VaccinationRateS*(S[n] + R[n]) - self.ContactRateSV[n]*(C/self.Population)*SV[n] - self.DeathRate*SV[n] - self.VaccinationRateSV*SV[n] + self.RecoveryRate*SVI[n]
+            dSVE    = self.ContactRateSV[n]*(C/self.Population)*SV[n] - self.InfectionRate*SVE[n] - self.DeathRate*SVE[n]
+            dSVI    = self.InfectionRate*SVE[n] - self.RecoveryRate*SVI[n] - self.DeathRateCOVIDSV*SVI[n]
 
-            dR = self.RecoveryRate*I[n] - self.ImmunityLossRate*R[n] - self.DeathRate*R[n] \
-                 - self.VaccinationRate1[n]*R[n]
+            dDV     = self.VaccinationRateSV*SV[n] - self.ContactRateDV[n]*(C/self.Population)*DV[n] + self.RecoveryRate*DVI[n] - self.DeathRate*DV[n] 
+            dDVE    = self.ContactRateDV[n]*(C/self.Population)*DV[n] - self.InfectionRate*DVE[n] - self.DeathRate*DVE[n]
+            dDVI    = self.InfectionRate*DVE[n] - self.RecoveryRate*DVI[n] - self.DeathRateCOVIDDV*DVI[n]
 
-            dE1 = self.ExposureRateV1[n]*((infec)/self.population)*V1[n] - self.InfectionRate*E1[n] - self.DeathRate*E1[n]
+            dSHR    = - self.ContactRateSHR[n]*(C/self.Population)*SHR[n] + self.ImmunityLossRate*RHR[n] - self.VaccinationRateSHR*SHR[n]  - self.DeathRate*SHR[n] 
+            dEHR    = self.ContactRateSHR[n]*(C/self.Population)*SHR[n] - self.InfectionRate*EHR[n] - self.DeathRate*EHR[n] 
+            dIHR    = self.InfectionRate*EHR[n] - self.RecoveryRate*IHR[n] - self.DeathRateCOVIDHR*IHR[n]
+            dRHR    = self.RecoveryRate*IHR[n] - self.VaccinationRateSHR*RHR[n] - self.ImmunityLossRate*RHR[n] - self.DeathRate*RHR[n]
 
-            dI1 = - self.RecoveryRateV1*I1[n] + self.InfectionRate*E1[n] - self.COVIDDeathRate1*I1[n]
+            dSVHR     = self.VaccinationRateSHR*(SHR[n] + RHR[n]) - self.ContactRateSVHR[n]*(C/self.Population)*SVHR[n] - self.DeathRate*SVHR[n] - self.VaccinationRateSVHR*SVHR[n] + self.RecoveryRate*SVIHR[n]
+            dSVEHR    = self.ContactRateSVHR[n]*(C/self.Population)*SVHR[n] - self.InfectionRate*SVEHR[n] - self.DeathRate*SVEHR[n]
+            dSVIHR    = self.InfectionRate*SVEHR[n] - self.RecoveryRate*SVIHR[n] - self.DeathRateCOVIDSVHR*SVIHR[n]
 
-            dE2 = self.ExposureRateV2[n]*((infec)/self.population)*V2[n] - self.InfectionRate*E2[n] - self.DeathRate*E2[n]
+            dDVHR     = self.VaccinationRateSVHR*SVHR[n] - self.ContactRateDV[n]*(C/self.Population)*DVHR[n] + self.RecoveryRate*DVIHR[n] - self.DeathRate*DVHR[n] 
+            dDVEHR    = self.ContactRateDV[n]*(C/self.Population)*DVHR[n] - self.InfectionRate*DVEHR[n] - self.DeathRate*DVEHR[n]
+            dDVIHR    = self.InfectionRate*DVEHR[n] - self.RecoveryRate*DVIHR[n] - self.DeathRateCOVIDDVHR*DVIHR[n]
 
-            dI2 =  - self.RecoveryRateV2*I2[n] + self.InfectionRate*E2[n] - self.COVIDDeathRate2*I2[n]
+            S.append(S[n] + dS); E.append(E[n] + dE); I.append(I[n] + dI); R.append(R[n] + dR)
+            SV.append(SV[n] + dSV); SVE.append(SVE[n] + dSVE); SVI.append(SVI[n] + dSVI)
+            DV.append(SV[n] + dDV); DVE.append(SVE[n] + dDVE); DVI.append(SVI[n] + dDVI)
+            SHR.append(SHR[n] + dSHR); EHR.append(EHR[n] + dEHR); IHR.append(IHR[n] + dIHR); RHR.append(RHR[n] + dRHR)
+            SVHR.append(SVHR[n] + dSVHR); SVEHR.append(SVEHR[n] + dSVEHR); SVIHR.append(SVIHR[n] + dSVIHR)
+            DVHR.append(DVHR[n] + dDVHR); DVEHR.append(DVEHR[n] + dDVEHR); DVIHR.append(DVIHR[n] + dDVIHR)
 
-            dV1 = self.VaccinationRate1[n]*S[n] + self.VaccinationRate1[n]*R[n] - self.VaccinationRate2[n]*V1[n] \
-                 - self.ExposureRateV1[n]*((infec)/self.population)*V1[n] - self.DeathRate*V1[n] + self.RecoveryRateV1*I1[n]
-
-            dV2 = self.VaccinationRate2[n]*V1[n] - self.DeathRate*V2[n] - self.ExposureRateV2[n]*((infec)/self.population)*V2[n] \
-                + self.RecoveryRateV2*I2[n]
-
-            COVIDDeaths = self.COVIDDeathRate*I[n] + self.COVIDDeathRate1*I1[n] + self.COVIDDeathRate2*I2[n]
-            totalcases +=  self.ExposureRateV2[n]*((infec)/self.population)*V2[n] + self.ExposureRateV1[n]*((infec)/self.population)*V1[n] + self.ExposureRate[n]*((infec)/self.population)*S[n]
-            self.population += dS + dE + dE1 + dE2 + dI + dI1 + dI2 + dR + dV1 + dV2
-
-            S.append(S[n] + dS)
-            E.append(E[n] + dE)
-            E1.append(E1[n] + dE1)
-            E2.append(E2[n] + dE2)
-            I.append(I[n] + dI)
-            I1.append(I1[n] + dI1)
-            I2.append(I2[n] + dI2)
-            R.append(R[n] + dR)
-            V1.append(V1[n] + dV1)
-            V2.append(V2[n] + dV2)
-            D.append(COVIDDeaths)     
-            T.append(n)
-
-        print("total cases: ", int(totalcases))
-        print("total deaths: ", int(sum(D)))
-        print("vaccinated: ", int((np.array(I1) + np.array(E1) + np.array(V1))[-1]))
-        print("fully vaccinated: ", int((np.array(I2) + np.array(E2) + np.array(V2))[-1]))
-        return  S ,I, E ,R, V1, V2, T, E2, E1, I1, I2, D 
-
-    def LinePlot(self):
-        S ,I, E ,R, V1, V2, T, E2, E1, I1, I2, D = self.NumInt()
-        plt.plot(T, S, label="Susceptible")
-        plt.plot(T, np.array(I)+np.array(I1)+np.array(I2)+np.array(E)+np.array(E1)+np.array(E2), label="Infected")
-        plt.plot(T, R, label="Recovered")
-        plt.plot(T, V2, label="Fully Vaccinated")
-        plt.plot(T, V1, label="Vaccinated")
-        plt.xlabel("Time (Days)")
-        plt.ylabel("Population")
-        plt.title("SEIRSV2 Pandemic model Lineplot")
-        plt.legend()
-        plt.show()
-
-    def StackPlot(self):
-        S ,I, E ,R, V1, V2, T, E2, E1, I1, I2, D = self.NumInt()
-        plt.stackplot(T, S, E, I, R, V1, V2,  labels=["Susceptible","Exposed","Infected","Recovered","1st Dose", "2nd Dose"])
-        plt.xlabel("Time (Days)")
-        plt.ylabel("Population")
-        plt.xlim(0,self.T_final)
-        plt.ylim(0,self.population)
-        plt.title("SEIRSV2 Pandemic model StackPlot")
-        plt.legend()
-        plt.show()
-
-    def InfectionsPlot(self):
-        S ,I, E ,R, V1, V2, T, E2, E1, I1, I2, D = self.NumInt()
-        plt.plot(T, np.array(E) + np.array(I), label="Infections")
-        plt.xlabel("Time (Days)")
-        plt.ylabel("Infections from COVID-19")
-        plt.title("SEIRSV2 Pandemic model Deaths")
-        plt.show()
-
-    def DeathsPlot(self):
-        S ,I, E ,R, V1, V2, T, E2, E1, I1, I2, D = self.NumInt()
-        plt.plot(T, D, label="Deaths", c='k')
-        plt.xlabel("Time (Days)")
-        plt.ylabel("Deaths from COVID-19")
-        plt.title("SEIRSV2 Pandemic model Deaths")
-        plt.show()
-
-    def PieChart(self):
-        S ,I, E ,R, V1, V2, T, E2, E1, I1, I2, D = self.NumInt()
-        data = np.array([S[-1], E[-1], I[-1], R[-1], V1[-1], V2[-1]])
-        l = ["Susceptible","Exposed", "Infected", "Recovered", "1st Dose", "2nd Dose"]
-        plt.pie(data, labels=l)
-        plt.title("SEIRSV2 Pandemic model Final State")
-        plt.show()
-
-    def VectorField(self):
-        s,i,e,r = np.meshgrid(np.linspace(1,self.population,25),\
-                              np.linspace(1,self.population,25),\
-                              np.linspace(1,self.population,25),\
-                              np.linspace(1,self.population,25))
-
-        dS = (self.BirthRate*self.population) - self.ExposureRate*((i + e)/self.population)*s \
-                + self.ImmunityLossRate*r - self.DeathRate*s - self.VaccinationRate1*s
-
-        dI = self.InfectionRate*e - self.RecoveryRate*i - self.COVIDDeathRate*i \
-                - self.RecoveryRateV1*i - self.RecoveryRateV2*i
+            self.Population += dR + dS + dI + dE + dSV + dSVE + dSVI + \
+                               dDV + dDVE + dDVI + dSHR + dEHR + dIHR + \
+                               dRHR + dSVHR + dSVEHR + dSVIHR + dDVHR + \
+                               dDVEHR + dDVIHR
         
-        plt.quiver(s,i,dS,dI)
-        plt.xlabel("Susceptible")
-        plt.ylabel("Infected")
-        plt.title("SEIRSV2 vector field")
+        plt.plot(I)
         plt.show()
 
-    def ASCII_line(self):
-        simtime = 10
-        sim = np.array(["*","S","S","S","S","S","E","S","S","S","S","*"])
-        
-        for j in range(0,simtime):
-            print(str(j), sim)
-
-            newsim = sim.copy()
-            for n in range(len(sim)-1):
-                if sim[n] == "S":
-                    if sim[n+1] == "E" or sim[n-1] == "E":
-                        newsim[n] = "E"
-
-            sim = newsim
-            
-    def animation_grid_frame(self, sim):
-        
-        newsim = sim.copy()
-        for x in range(len(sim[0])-1):
-            for y in range(len(sim[0])-1):
-
-                if sim[x,y] == "S":
-                    
-                    if (sim[y,x+1] == "E" or sim[y,x-1] == "E" \
-                    or sim[y+1,x] == "E" or sim[y-1,x] == "E" \
-                    or sim[y,x+1] == "I" or sim[y,x-1] == "I" \
-                    or sim[y+1,x] == "I" or sim[y-1,x] == "I") \
-                    and random() < 0.9:
-                        newsim[x,y] = "E"
-                    
-                    elif random() < 0.3:
-                        sim[x,y] == "1"
-                    
-                elif sim[x,y] == "E":
-                    
-                    if random() < 0.5:
-                        newsim[x,y] = "I"
-
-                elif sim[x,y] == "E1":
-                    
-                    if random() < 0.5:
-                        newsim[x,y] = "I1"
-                
-                elif sim[x,y] == "E2":
-                    
-                    if random() < 0.5:
-                        newsim[x,y] = "I2"
-
-                elif sim[x,y] == "I":
-                    
-                    if random() < 0.2:
-                        newsim[x,y] = "R"
-
-                elif sim[x,y] == "I1":
-                    
-                    if random() < 0.2:
-                        newsim[x,y] = "1"
-                
-                elif sim[x,y] == "I2":
-                    
-                    if random() < 0.2:
-                        newsim[x,y] = "2"
-
-                elif sim[x,y] == "R":
-
-                    if random() < 0.05:
-                        newsim[x,y] = "S"
-                    elif random() < 0.3:
-                        newsim[x,y] = "1"
-                
-                elif sim[x,y] == "1":
-
-                    if random() < 0.6:
-                        newsim[x,y] = "2"
-                    elif random() < 0.1:
-                        newsim[x,y] = "E1"
-                
-                elif sim[x,y] == "2":
-
-                    if random() < 0.1:
-                        newsim[x,y] = "E2"
-
-
-        return newsim
-    
-    def animation_grid(self):
-        simtime = 10
-        sim = np.array([["*","*","*","*","*","*","*","*","*","*","*","*"],
-                        ["*","S","S","S","S","S","S","S","S","S","S","*"],
-                        ["*","S","S","S","S","S","S","S","S","S","S","*"],
-                        ["*","S","S","S","S","S","S","S","S","S","S","*"],
-                        ["*","S","S","S","S","S","S","S","S","S","S","*"],
-                        ["*","S","S","S","S","S","S","S","S","S","S","*"],
-                        ["*","S","S","S","S","S","E","S","S","S","S","*"],
-                        ["*","S","S","S","S","S","S","S","S","S","S","*"],
-                        ["*","S","S","S","S","S","S","S","S","S","S","*"],
-                        ["*","S","S","S","S","S","S","S","S","S","S","*"],
-                        ["*","S","S","S","S","S","S","S","S","S","S","*"],
-                        ["*","*","*","*","*","*","*","*","*","*","*","*"],])
-        
-        colourMap = {"S":"blue",
-                      "E":"orange",
-                      "E1":"orange",
-                      "E2":"orange",
-                      "I":"red",
-                      "I1":"red",
-                      "I2":"red",
-                      "R": "green",
-                      "1": "grey",
-                      "2":"dimgrey"}
-
-        for j in range(0,simtime):
-            print()
-            print(str(j))
-            print(sim)
-            sim = self.animation_grid_frame(sim)
-
-        
 
 if __name__ == "__main__":
     SEIRSV2 = SEIRSV2_Model()
-    SEIRSV2.LinePlot()
+    SEIRSV2.NumInt()
+

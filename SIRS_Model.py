@@ -22,7 +22,7 @@ class SIRS_Model():
         self.ImmunityLossRate = 1/210
         self.RecoveryRate = 1/10
         self.InfectionRate = 0.19
-        self.TDInfectionRate = (self.RecoveryRate)*np.array(COVIDdf['reproduction_rate'][30:1030])
+        self.TDInfectionRate = (self.RecoveryRate)*np.array(COVIDdf['reproduction_rate'][30:1080])
 
         self.InfectionRateGrid = 0.6
         self.RecoveryRateGrid = 0.1
@@ -79,7 +79,7 @@ class SIRS_Model():
 
     def InfectionsPlot(self):
         S ,I, R, D = self.NumInt()
-        plt.plot(I*67000000, label="Infections", c='#a80808')
+        plt.plot(I*67500000, label="Infections", c='#a80808')
         plt.xlabel("Time (Days)")
         plt.ylabel("Infections from COVID-19")
         plt.xlim(0,(len(self.TDInfectionRate)))
@@ -315,6 +315,6 @@ class SIRS_Model():
         
 if __name__ == "__main__":
     SIRS = SIRS_Model()
-    SIRS.grid_sim()
+    SIRS.InfectionsPlot()
 
     
