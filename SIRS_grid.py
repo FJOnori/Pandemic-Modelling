@@ -3,13 +3,21 @@ import numpy as np
 from matplotlib import colors
 import matplotlib.pyplot as plt
 
-def setup_grid(gridsize=10):
+def setup_grid_centre(gridsize=10):
         #concatinates rows and edges based on gridsize and max_radius
         sim = np.array([[1]*gridsize]*gridsize)
         #places a single infected individual in the middle of the grid
         centre = int(gridsize/2)
         sim[centre, centre] = 3
         return sim
+
+def setup_grid_random(gridsize=10):
+    sim = np.array([[1]*gridsize]*gridsize)
+    for x in range(gridsize):
+        for y in range(gridsize):
+            if random() < 0.2:
+                sim[x,y] = 3
+    return sim
 
 def grid_frame_update(sim):
         
@@ -18,26 +26,37 @@ def grid_frame_update(sim):
         
         for x in range(size):
             for y in range(size):
+
+                n = random()
                 
                 if sim[x,y] == 1:
                     if (sim[y,(x+1)%size] == 3 or sim[y,(x-1)%size] == 3 \
                     or sim[(y+1)%size,x] == 3 or sim[(y-1)%size,x] == 3 \
                     or sim[(y-1)%size,(x+1)%size] == 3 or sim[(y+1)%size,(x-1)%size] == 3 \
-                    or sim[(y-1)%size,(x-1)%size] == 3 or sim[(y+1)%size,(x+1)%size] == 3) \
-                    and random() < 0.5:
-                        newsim[x,y] = 3
+                    or sim[(y-1)%size,(x-1)%size] == 3 or sim[(y+1)%size,(x+1)%size] == 3):
+
+                        nearsq = [sim[y,(x+1)%size], sim[y,(x-1)%size], 
+                                  sim[(y+1)%size,x], sim[(y-1)%size,x],
+                                  sim[(y-1)%size,(x+1)%size], sim[(y+1)%size,(x-1)%size],
+                                  sim[(y-1)%size,(x-1)%size], sim[(y+1)%size,(x+1)%size]]
+                        
+                        infecProb = (nearsq.count(3))/5
+
+                        if n < infecProb:
+                            newsim[x,y] = 3
+
                 elif sim[x,y] == 3:
-                    if random() < 0.25:
+                    if n < 0.25:
                         newsim[x,y] = 5
                 elif sim[x,y] == 5:
-                    if random() < 0.015:
+                    if n < 0.015:
                         newsim[x,y] = 1
         
         return newsim
 
-def grid_sim(simtime=1000, gridsize=50):
-        sim = setup_grid(gridsize)
-        cmap = colors.ListedColormap(['steelblue','crimson','silver'])
+def grid_sim(simtime=10000, gridsize=50):
+        sim = setup_grid_random(gridsize)
+        cmap = colors.ListedColormap(['blue','red','grey'])
         bounds = [0,2,4,6]
         plt.tick_params(bottom=False, top=False, left=False, right=False, labelbottom=False, labelleft=False)
 
@@ -46,7 +65,7 @@ def grid_sim(simtime=1000, gridsize=50):
             plt.cla()
             plt.imshow(sim, cmap=cmap)
             plt.draw()
-            plt.pause(0.01)
+            plt.pause(0.00001)
 
             
            
