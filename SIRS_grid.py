@@ -30,6 +30,7 @@ def grid_frame_update(sim):
                 n = random()
                 
                 if sim[x,y] == 1:
+
                     if (sim[y,(x+1)%size] == 3 or sim[y,(x-1)%size] == 3 \
                     or sim[(y+1)%size,x] == 3 or sim[(y-1)%size,x] == 3 \
                     or sim[(y-1)%size,(x+1)%size] == 3 or sim[(y+1)%size,(x-1)%size] == 3 \
@@ -39,8 +40,8 @@ def grid_frame_update(sim):
                                   sim[(y+1)%size,x], sim[(y-1)%size,x],
                                   sim[(y-1)%size,(x+1)%size], sim[(y+1)%size,(x-1)%size],
                                   sim[(y-1)%size,(x-1)%size], sim[(y+1)%size,(x+1)%size]]
-                        
-                        infecProb = (nearsq.count(3))/5
+
+                        infecProb = (nearsq.count(3))/8
 
                         if n < infecProb:
                             newsim[x,y] = 3
@@ -54,8 +55,8 @@ def grid_frame_update(sim):
         
         return newsim
 
-def grid_sim(simtime=10000, gridsize=8000):
-        sim = setup_grid_random(gridsize)
+def grid_sim(simtime=10000, gridsize=50):
+        sim = setup_grid_centre(gridsize)
         cmap = colors.ListedColormap(['steelblue','crimson','silver'])
         bounds = [0,2,4,6]
         plt.tick_params(bottom=False, top=False, left=False, right=False, labelbottom=False, labelleft=False)
@@ -63,13 +64,10 @@ def grid_sim(simtime=10000, gridsize=8000):
         for j in range(0,simtime):
             sim = grid_frame_update(sim)
             plt.cla()
-            sim.count()
             plt.imshow(sim, cmap=cmap)
             plt.draw()
             plt.pause(0.00001)
 
             
            
-        
-
 grid_sim()
