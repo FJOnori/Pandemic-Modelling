@@ -46,23 +46,24 @@ def grid_frame_update(sim):
                             newsim[x,y] = 3
 
                 elif sim[x,y] == 3:
-                    if n < 0.25:
+                    if n < 0.1:
                         newsim[x,y] = 5
                 elif sim[x,y] == 5:
-                    if n < 0.015:
+                    if n < (1/210):
                         newsim[x,y] = 1
         
         return newsim
 
-def grid_sim(simtime=10000, gridsize=50):
+def grid_sim(simtime=10000, gridsize=8000):
         sim = setup_grid_random(gridsize)
-        cmap = colors.ListedColormap(['blue','red','grey'])
+        cmap = colors.ListedColormap(['steelblue','crimson','silver'])
         bounds = [0,2,4,6]
         plt.tick_params(bottom=False, top=False, left=False, right=False, labelbottom=False, labelleft=False)
 
         for j in range(0,simtime):
             sim = grid_frame_update(sim)
             plt.cla()
+            sim.count()
             plt.imshow(sim, cmap=cmap)
             plt.draw()
             plt.pause(0.00001)
