@@ -1,6 +1,5 @@
 from random import random, randint
 import numpy as np
-import pandas as pd
 from matplotlib import colors
 import matplotlib.pyplot as plt
 
@@ -42,7 +41,7 @@ def grid_frame_update(sim):
                                   sim[(y-1)%size,(x+1)%size], sim[(y+1)%size,(x-1)%size],
                                   sim[(y-1)%size,(x-1)%size], sim[(y+1)%size,(x+1)%size]]
 
-                        infecProb = (nearsq.count(3))/5
+                        infecProb = (nearsq.count(3))/8
 
                         if n < infecProb:
                             newsim[x,y] = 3
@@ -51,46 +50,24 @@ def grid_frame_update(sim):
                     if n < 0.1:
                         newsim[x,y] = 5
                 elif sim[x,y] == 5:
-                    if n < 0:
+                    if n < (1/210):
                         newsim[x,y] = 1
         
         return newsim
 
-def grid_sim(simtime=1000, gridsize=8000):
-        sim = setup_grid_centre(gridsize)
-        cmap = colors.ListedColormap(['steelblue','crimson','silver'])
+def grid_sim(simtime=10000, gridsize=50):
+        sim = setup_grid_centre(gridsize) #blue, #red, #grey
+        cmap = colors.ListedColormap(['#1e68b3','#b81111','#aaacad'])
         bounds = [0,2,4,6]
-        #plt.tick_params(bottom=False, top=False, left=False, right=False, labelbottom=False, labelleft=False)
-        
-        S = [gridsize**2 - 1]
-        I = [1]
-        R = [0]
+        plt.tick_params(bottom=False, top=False, left=False, right=False, labelbottom=False, labelleft=False)
 
         for j in range(0,simtime):
             sim = grid_frame_update(sim)
-            S.append(list((sim.flatten())).count(1))
-            I.append(list((sim.flatten())).count(3))
-            R.append(list((sim.flatten())).count(5))
-            #plt.cla()
-            #plt.imshow(sim, cmap=cmap)
-            #plt.draw()
-            #plt.pause(0.00001)
-        
-        dict = {"S":S,"I":I,"R":R}
-        df = pd.DataFrame(dict) 
-        df.to_csv('SIR5.csv') 
+            plt.cla()
+            plt.imshow(sim, cmap=cmap)
+            plt.draw()
+            plt.pause(0.00001)
 
-
-
-        #plt.close()
-        #plt.stackplot(range(0,simtime+1), 100*np.array(I)/(gridsize**2), 100*np.array(S)/(gridsize**2), 100*np.array(R)/(gridsize**2), colors=['crimson','steelblue','silver'], labels=["Infected","Susceptible","Recovered"])        
-        #plt.xlabel("Time (days)")
-        #plt.ylabel("Percentage of Population")
-        #plt.title("SIR Grid Simulation")
-        #plt.xlim(0,simtime)
-        #plt.ylim(0,100)
-        #plt.legend()
-        #plt.savefig("SIRGrid.png", dpi=227)
             
            
 grid_sim()

@@ -24,7 +24,7 @@ def LambertW_plot():
 
 def stable_states():
     N = 1
-    s0 = N - 0.00001
+    s0 = N - 0.000001
     R0 = []
     Sw = []
 
@@ -35,16 +35,16 @@ def stable_states():
         R0.append(r)
         
 
-    plt.plot(R0, np.array(Sw)*100, c="steelblue", label="Susceptible")
-    plt.plot(R0, (N - np.array(Sw))*100, c="#969696", label="Recovered")
+    plt.plot(R0, np.array(Sw), c="#1e68b3", label="Susceptible")
+    plt.plot(R0, (N - np.array(Sw)), c="#aaacad", label="Recovered")
     plt.title("SIR Stable States")
     plt.xlabel("R\u2080 value")
-    plt.ylabel("Percentage of Population")
+    plt.ylabel("Proportion of Population")
     plt.xlim(1,3)
-    plt.ylim(0,100)
+    plt.ylim(0,1)
     plt.grid(ls=":",c='grey')
     plt.legend()
-    plt.savefig("Stable-States.png",dpi=227)
+    plt.savefig("LambertW/Stable-States.png",dpi=227)
 
 
-LambertW_plot()
+stable_states()
