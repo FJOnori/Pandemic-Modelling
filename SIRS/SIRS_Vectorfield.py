@@ -80,7 +80,7 @@ class SIRS_vectorfields():
         dR = self.gamma*y - self.psi*z
 
         ax.quiver(x,y,z,dS,dI,dR,length=0.1, normalize=True)
-        ax.set_title("Proportion of initial population in each compartment")
+        ax.set_title("SIRS 3D Vectorfield")
         ax.set_xlabel('Susceptible')
         ax.set_ylabel('Infected')
         ax.set_zlabel('Recovered')

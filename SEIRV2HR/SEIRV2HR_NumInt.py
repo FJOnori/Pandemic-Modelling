@@ -15,7 +15,7 @@ class SEIRSV2_Model():
         self.InitialExposures       = self.InitialExposuresHR + self.InitialExposuresLR
 
         self.VaccineDay             = 0
-        self.BirthRateLR            = 2.78363e-5
+        self.BirthRateLR            = 0 #2.78363e-5
         self.BirthRateHR            = 0 #2.78363e-5
         self.DeathRate              = 0 #2.48321e-5
         
@@ -24,8 +24,8 @@ class SEIRSV2_Model():
         self.RecoveryRate           = 0.05
         self.ImmunityLossRate       = 0.0035
         self.ContactRateS           = 1/5
-        self.ContactRateSV          = 0 #self.ContactRateS * 0.19
-        self.ContactRateDV          = 0 #self.ContactRateS * 0.09
+        self.ContactRateSV          = self.ContactRateS * 0.19
+        self.ContactRateDV          = self.ContactRateS * 0.09
         self.ContactRateSHR         = self.ContactRateS  * 2
         self.ContactRateSVHR        = self.ContactRateSHR * 0.19
         self.ContactRateDVHR        = self.ContactRateSHR * 0.09
@@ -51,16 +51,16 @@ class SEIRSV2_Model():
 
         for n in np.arange(0, 1000):
 
-            C = I[n] + E[n] #+ SVE[n] + SVI[n] + DVE[n] + DVI[n]
+            C = I[n] + E[n] + SVE[n] + SVI[n] + DVE[n] + DVI[n]
             
             dS = self.BirthRateLR*self.PopulationTotal - self.ContactRateS*(C/self.PopulationTotal)*S[n] + self.ImmunityLossRate*R[n] - self.DeathRate*S[n] - self.VaccinationRateS*S[n]
             dE = self.ContactRateS*(C/self.PopulationTotal)*S[n] - self.InfectionRate*E[n] - self.DeathRate*E[n] 
             dI = self.InfectionRate*E[n] - self.RecoveryRate*I[n] - self.DeathRateCOVID*I[n] 
             dR = self.RecoveryRate*I[n] - self.ImmunityLossRate*R[n] - self.DeathRate*R[n] - self.VaccinationRateS*R[n]
 
-            dSV = self.VaccinationRateS*S[n] + self.VaccinationRateS*R[n] - self.VaccinationRateSV*SV[n]
-            #dSVE = self.ContactRateSV*(C/self.PopulationTotal)*SV[n] - self.InfectionRate*SVE[n] - self.DeathRate*SVE[n]
-            #dSVI = self.InfectionRate*SVE[n] - self.RecoveryRate*SVI[n] - self.DeathRateCOVIDSV*SVI[n]
+            dSV = self.VaccinationRateS*S[n] + self.VaccinationRateS*R[n] - self.ContactRateSV*(C/self.PopulationTotal)*SV[n] - self.VaccinationRateSV*SV[n] - self.DeathRate*SV[n] + self.RecoveryRate*SVI[n]
+            dSVE = self.ContactRateSV*(C/self.PopulationTotal)*SV[n] - self.InfectionRate*SVE[n] - self.DeathRate*SVE[n]
+            dSVI = self.InfectionRate*SVE[n] - self.RecoveryRate*SVI[n] - self.DeathRateCOVIDSV*SVI[n]
 
             dDV = self.VaccinationRateSV*SV[n] #- self.ContactRateDV*(C/self.PopulationTotal)*DV[n] + self.RecoveryRate*DVI[n] - self.DeathRate*DV[n] 
             #dDVE = self.ContactRateDV*(C/self.PopulationTotal)*DV[n] - self.InfectionRate*DVE[n] - self.DeathRate*DVE[n]
@@ -96,19 +96,21 @@ class SEIRSV2_Model():
             #dDVIHR    = self.InfectionRate*DVEHR[n] - self.RecoveryRate*DVIHR[n] - self.DeathRateCOVIDDVHR*DVIHR[n]
 
             S.append(S[n] + dS); E.append(E[n] + dE); I.append(I[n] + dI); R.append(R[n] + dR)
-            SV.append(SV[n] + dSV); #SVE.append(SVE[n] + dSVE); SVI.append(SVI[n] + dSVI)
-            DV.append(DV[n] + dDV);# DVE.append(SVE[n] + dDVE); DVI.append(SVI[n] + dDVI)
+            SV.append(SV[n] + dSV); SVE.append(SVE[n] + dSVE); SVI.append(SVI[n] + dSVI)
+            DV.append(DV[n] + dDV); DVE.append(SVE[n] + dDVE); DVI.append(SVI[n] + dDVI)
             #SHR.append(SHR[n] + dSHR); EHR.append(EHR[n] + dEHR); IHR.append(IHR[n] + dIHR); RHR.append(RHR[n] + dRHR)
             #SVHR.append(SVHR[n] + dSVHR); SVEHR.append(SVEHR[n] + dSVEHR); SVIHR.append(SVIHR[n] + dSVIHR)
             #DVHR.append(DVHR[n] + dDVHR); DVEHR.append(DVEHR[n] + dDVEHR); DVIHR.append(DVIHR[n] + dDVIHR)
 
-            self.PopulationLR += dR + dS + dI + dE + dSV + dDV #+ dSVE + dSVI #+ dDVE + dDVI 
+            self.PopulationLR += dR + dS + dI + dE + dSV + dDV + dSVE + dSVI + dDVE + dDVI 
+
+            print(DV[-1])
             #self.PopulationHR += dSHR + dEHR + dIHR + dRHR + dSVHR + dSVEHR + dSVIHR + dDVHR + dDVEHR + dDVIHR
             #self.PopulationTotal += self.PopulationLR #+ self.PopulationHR
         
 
         plt.plot(S, label = "Susceptible", c = '#1e68b3')
-        plt.plot(np.array(I) + np.array(E), label = "Infected", c = '#b81111')
+        plt.plot(np.array(I) + np.array(E) + np.array(SVE) + np.array(SVI) + np.array(DVE) +  np.array(DVI), label = "Infected", c = '#b81111')
         plt.plot(R, label = "Recovered", c = '#aaacad')
         plt.plot(np.array(SV), label = "Vaccinated", c='#5e017d')
         plt.plot(np.array(DV), label = "Fully Vaccinated", c='#439603')

@@ -10,16 +10,15 @@ def LambertW_plot():
         y.append(lambertw(r))
         x.append(r)
 
-    plt.plot(y, c="green")
+    plt.grid(ls=":",c='grey')
+    plt.plot(np.arange(0,100,0.05),y, c="green")
     plt.title("Lambert W function")
     plt.xlabel("X-input")
     plt.ylabel("Y-output")
-    plt.xlim(0,2000)
+    plt.xlim(0,100)
     plt.ylim(0,3.5)
-    plt.grid(ls=":",c='grey')
-    plt.savefig("lambertW.png", dpi=227)
-
-
+    plt.savefig("LambertW/lambertW.png", dpi=227)
+    plt.show()
 
 
 def stable_states():
@@ -34,7 +33,7 @@ def stable_states():
         Sw.append(Wmul*lambertw(Wsub))
         R0.append(r)
         
-
+    plt.grid(ls=":",c='grey')
     plt.plot(R0, np.array(Sw), c="#1e68b3", label="Susceptible")
     plt.plot(R0, (N - np.array(Sw)), c="#aaacad", label="Recovered")
     plt.title("SIR Stable States")
@@ -42,9 +41,8 @@ def stable_states():
     plt.ylabel("Proportion of Population")
     plt.xlim(1,3)
     plt.ylim(0,1)
-    plt.grid(ls=":",c='grey')
     plt.legend()
     plt.savefig("LambertW/Stable-States.png",dpi=227)
 
 
-stable_states()
+LambertW_plot()

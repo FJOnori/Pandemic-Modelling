@@ -41,33 +41,54 @@ def grid_frame_update(sim):
                                   sim[(y-1)%size,(x+1)%size], sim[(y+1)%size,(x-1)%size],
                                   sim[(y-1)%size,(x-1)%size], sim[(y+1)%size,(x+1)%size]]
 
-                        infecProb = (nearsq.count(3))/8
+                        infecProb = (nearsq.count(3))
 
-                        if n < infecProb:
+                        if n < 1/5:
                             newsim[x,y] = 3
 
                 elif sim[x,y] == 3:
                     if n < 0.1:
                         newsim[x,y] = 5
                 elif sim[x,y] == 5:
-                    if n < (1/210):
+                    if n < (1/120):
                         newsim[x,y] = 1
         
         return newsim
 
-def grid_sim(simtime=10000, gridsize=50):
+def grid_sim(simtime=1000, gridsize=50):
         sim = setup_grid_centre(gridsize) #blue, #red, #grey
         cmap = colors.ListedColormap(['#1e68b3','#b81111','#aaacad'])
         bounds = [0,2,4,6]
         plt.tick_params(bottom=False, top=False, left=False, right=False, labelbottom=False, labelleft=False)
 
+        S = []
+        I = []
+        R = []
+
         for j in range(0,simtime):
             sim = grid_frame_update(sim)
+
+            S.append(np.count_nonzero(sim == 1))
+            I.append(np.count_nonzero(sim == 3))
+            R.append(np.count_nonzero(sim == 5))
+
             plt.cla()
             plt.imshow(sim, cmap=cmap)
             plt.draw()
             plt.pause(0.00001)
 
+        plt.close()
+
+        plt.plot(S, c='#1e68b3', label="Susceptible")
+        plt.plot(I, c='#b81111', label="Infected")
+        plt.plot(R, c='#aaacad', label="Recovered")
+        plt.title("SIRS Grid Simulation")
+        plt.ylabel("Population Proportion")
+        plt.xlabel("Time (days)")
+        plt.xlim(0,simtime)
+        plt.ylim(0,gridsize**2)
+        plt.legend()
+        plt.savefig("SIRS/SIRSgridsim.png", dpi=227)
             
            
 grid_sim()
