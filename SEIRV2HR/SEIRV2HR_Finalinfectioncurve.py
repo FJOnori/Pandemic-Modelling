@@ -5,19 +5,17 @@ import matplotlib.pyplot as plt
 class SEIRSV2_Model():
 
     def __init__(self):
-
-        
         self.TotalTime          = 1000 
         self.dt                 = 1
         self.Iterations         = int(self.TotalTime/self.dt)
         self.PopulationLR       = 0.9
         self.PopulationHR       = 0.1
         self.Population         = self.PopulationLR + self.PopulationHR
-        self.InitalExposuresLR  = 0.0001
-        self.InitalExposuresHR  = 0.0001
+        self.InitalExposuresLR  = 0.04
+        self.InitalExposuresHR  = 0.01
 
-        self.BirthRateLR        = 2.78363e-5
-        self.BirthRateHR        = 2.78363e-5
+        self.BirthRateLR        = (2.78363e-5)*0.9
+        self.BirthRateHR        = (2.78363e-5)*0.1
         self.DeathRate          = 2.48321e-5
         self.DeathRateCOVID     = 8.95027e-4
         self.DeathRateCOVIDHR   = self.DeathRateCOVID * 2
@@ -35,8 +33,8 @@ class SEIRSV2_Model():
         self.LatencyRate        = 1/3
         self.RecoveryRate       = 1/10
         self.ImmunityLossRate   = 1/210
-        self.Vaccination1Rate   = 1/500
-        self.Vaccination2Rate   = 1/500
+        self.Vaccination1Rate   = 1/2000
+        self.Vaccination2Rate   = 1/5000
         self.Vaccination1HRRate = 1/50
         self.Vaccination2HRRate = 1/250
 
@@ -97,35 +95,12 @@ class SEIRSV2_Model():
             V1HR.append(V1HR[n] + dV1HR*dt); EV1HR.append(EV1HR[n] + dEV1HR*dt); IV1HR.append(IV1HR[n] + dIV1HR*dt)
             V2HR.append(V2HR[n] + dV2HR*dt); EV2HR.append(EV2HR[n] + dEV2HR*dt); IV2HR.append(IV2HR[n] + dIV2HR*dt)
 
-        SP = np.array(S) + np.array(SHR)
-        IP = np.array(I) + np.array(IV1) + np.array(IV2) + np.array(IHR) + np.array(IV1HR) + np.array(IV2HR) +\
-             np.array(E) + np.array(EV1) + np.array(EV2) + np.array(EHR) + np.array(EV1HR) + np.array(EV2HR)
-        RP = np.array(R) + np.array(RHR)
-        V1P = np.array(V1) + np.array(V1HR)
-        V2P = np.array(V2) + np.array(V2HR)
-        
-        plt.plot(SP, label = "Susceptible", c = '#1e68b3')
-        plt.plot(IP, label = "Infectious", c = '#b81111')
-        plt.plot(RP, label = "Recovered", c = '#aaacad')
-        plt.plot(V1P, label = "Vaccinated", c = '#5e017d')
-        plt.plot(V2P, label = "Fully Vaccinated", c = '#439603')
-
-        plt.xlim(0,1000)
-        plt.ylim(0,1)
+        plt.plot(np.array(I) + np.array(IV1) + np.array(IV2) + np.array(IHR) + np.array(IV1HR) + np.array(IV2HR) + np.array(E) + np.array(EV1) + np.array(EV2) + np.array(EHR) + np.array(EV1HR) + np.array(EV2HR), label = "Infectious", c = '#b81111')
         plt.title("SEIRV2HR Model Lineplot")
         plt.xlabel("Time (Days)")
         plt.ylabel("Proportion of Population")
         plt.legend()
-        plt.savefig("SEIRV2HR_lineplot.png", dpi=227) 
-        plt.close()
-        
-        plt.title("SEIRV2HR Model Stackplot")
-        plt.xlim(0,1000)
-        plt.ylim(0,1)
-        plt.xlabel("Time (Days)")
-        plt.ylabel("Proportion of Population")
-        plt.stackplot(range(0,1001),SP,IP,RP,V1P,V2P, labels=["Susceptible","Infectious","Recovered","Vaccinated","Fully Vaccinated"], colors=['#1e68b3','#b81111','#aaacad','#5e017d','#439603'])
-        plt.savefig("SEIRV2HR_stackplot.png", dpi=227) 
+        plt.savefig("SEIRV2HRInfectioncurve.png", dpi=227) 
 
 
 if __name__ == "__main__":
