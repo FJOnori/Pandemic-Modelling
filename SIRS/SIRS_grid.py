@@ -55,7 +55,7 @@ def grid_frame_update(sim):
         
         return newsim
 
-def grid_sim(simtime=1000, gridsize=50):
+def grid_sim(simtime=10000, gridsize=100):
         sim = setup_grid_centre(gridsize) #blue, #red, #grey
         cmap = colors.ListedColormap(['#1e68b3','#b81111','#aaacad'])
         bounds = [0,2,4,6]

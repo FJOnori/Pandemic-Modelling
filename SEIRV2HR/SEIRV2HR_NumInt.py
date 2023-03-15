@@ -43,11 +43,11 @@ class SEIRSV2_Model():
     def NumInt(self):
 
         S = [self.PopulationLR - self.InitalExposuresLR]; E = [self.InitalExposuresLR]; I = [0]; R = [0]
-        V1 = [0]; EV1 = [0]; IV1 = [0]
-        V2 = [0]; EV2 = [0]; IV2 = [0]
+        V1 = [0]; EV1 = [0]; IV1 = [0]; RV1 = [0]
+        V2 = [0]; EV2 = [0]; IV2 = [0]; RV2 = [0]
         SHR = [self.PopulationHR - self.InitalExposuresHR]; EHR = [self.InitalExposuresHR]; IHR = [0]; RHR = [0]
-        V1HR = [0]; EV1HR = [0]; IV1HR = [0]
-        V2HR = [0]; EV2HR = [0]; IV2HR = [0]
+        V1HR = [0]; EV1HR = [0]; IV1HR = [0]; RV1HR = [0]
+        V2HR = [0]; EV2HR = [0]; IV2HR = [0]; RV2HR = [0]
 
         dt = self.dt
 
@@ -70,10 +70,12 @@ class SEIRSV2_Model():
             dV1 = self.Vaccination1Rate*(S[n] + R[n]) - self.Vaccination2Rate*V1[n] - NewInfectionsV1 + self.RecoveryRate*IV1[n] - self.DeathRate*V1[n]
             dEV1 = - self.LatencyRate*EV1[n] + NewInfectionsV1 - self.DeathRate*EV1[n]
             dIV1 = self.LatencyRate*EV1[n] - self.RecoveryRate*IV1[n] - self.DeathRateCOVIDSV*IV1[n]
+            dRV1 = 0
 
             dV2 = self.Vaccination2Rate*V1[n] - NewInfectionsV2 + self.RecoveryRate*IV2[n] - self.DeathRate*V2[n]
             dEV2 = NewInfectionsV2 - self.LatencyRate*EV2[n] - self.DeathRate*EV2[n]
             dIV2 = self.LatencyRate*EV2[n] - self.RecoveryRate*IV2[n] - self.DeathRateCOVIDDV*IV2[n]
+            dRV2 = 0
 
             dSHR = -NewInfectionsHR + self.ImmunityLossRate*RHR[n] - self.Vaccination1HRRate*SHR[n] + self.Population*self.BirthRateHR - self.DeathRate*SHR[n]
             dEHR = NewInfectionsHR - self.LatencyRate*EHR[n] - self.DeathRate*EHR[n]
@@ -83,10 +85,12 @@ class SEIRSV2_Model():
             dV1HR = self.Vaccination1HRRate*(SHR[n] + RHR[n]) - self.Vaccination2HRRate*V1HR[n] - NewInfectionsV1HR + self.RecoveryRate*IV1HR[n] - self.DeathRate*V1HR[n]
             dEV1HR = NewInfectionsV1HR - self.LatencyRate*EV1HR[n] - self.DeathRate*EV1HR[n]
             dIV1HR = self.LatencyRate*EV1HR[n] - self.RecoveryRate*IV1HR[n] - self.DeathRateCOVIDSVHR*V1HR[n]
+            dRV1HR = 0
 
             dV2HR = self.Vaccination2HRRate*V1HR[n] - NewInfectionsV2HR + self.RecoveryRate*IV2HR[n] - self.DeathRate*V2HR[n]
             dEV2HR = NewInfectionsV2HR - self.LatencyRate*EV2HR[n] - self.DeathRate*EV2HR[n]
             dIV2HR = self.LatencyRate*EV2HR[n] - self.RecoveryRate*IV2HR[n] - self.DeathRateCOVIDDVHR*IV2HR[n]
+            dRV1HR = 0
 
             self.Population += (dS+dE+dI+dR+dV1+dV2+dEV1+dEV2+dIV1+dIV2+dSHR+dEHR+dIHR+dRHR+dV1HR+dEV1HR+dIV1HR+dV2HR+dEV2HR+dIV2HR)*dt
 

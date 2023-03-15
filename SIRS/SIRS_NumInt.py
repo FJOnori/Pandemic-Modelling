@@ -19,6 +19,7 @@ class SIR_Model():
     def NumInt(self):
 
         S ,I, R, = [self.S_initial], [self.I_inital], [0]
+        IP = [0]
 
         for n in np.arange(0,1000):
 
@@ -31,6 +32,7 @@ class SIR_Model():
                S.append(S[n] + dS)
                I.append(I[n] + dI)
                R.append(R[n] + dR)
+    
 
         return np.array(S), np.array(I), np.array(R)
     
