@@ -12,7 +12,7 @@ class SIR_Model():
 
         COVIDdf = (pd.read_csv('owid-covid-data-uk.csv')).replace(np.nan, 0)
         
-        infectioncurve = np.array(list(np.array(COVIDdf['new_cases_smoothed']))[:1000])/67000000
+        infectioncurve = np.array(list(np.array(COVIDdf['new_cases_smoothed']))[:1000])
         kernel_size = 5
         kernel = np.ones(kernel_size) / kernel_size
         self.TrueInfectionCurve = np.convolve(infectioncurve, kernel, mode='same')
@@ -47,10 +47,10 @@ class SIR_Model():
         #plt.plot(self.TrueInfectionCurve, c='#bfacac', label="Infected", ls=":")
         plt.plot(NI, c='#b81111', label="Infected")
         plt.title("SIR Numerical Integration")
-        plt.ylabel("Population Proportion")
+        plt.ylabel("Proportion of Population Infected")
         plt.xlabel("Time (days)")
-        #plt.xlim(0,1000)
-        #plt.ylim(0,0.003)
+        plt.xlim(0,1000)
+        plt.ylim(0,0.0002)
         plt.savefig("SIR/SIRFinalInfectionCurve.png", dpi=227)
 
 if __name__ == "__main__":
