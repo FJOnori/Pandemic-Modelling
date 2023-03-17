@@ -6,7 +6,7 @@ class SEIRSV2_Model():
 
     def __init__(self):
         
-        self.TotalTime          = 3000 
+        self.TotalTime          = 1000 
         self.dt                 = 1
         self.Iterations         = int(self.TotalTime/self.dt)
         self.PopulationLR       = 0.9
@@ -123,11 +123,13 @@ class SEIRSV2_Model():
         plt.savefig("SEIRV2HR_lineplot.png", dpi=227) 
         plt.close()
         
+        
+
         plt.title("SEIRV2HR Model Stackplot")
         plt.xlim(0,self.TotalTime)
         plt.xlabel("Time (Days)")
         plt.ylabel("Proportion of Population")
-        plt.stackplot(range(0,self.TotalTime+1),SP,IP,RP,V1P,V2P, labels=["Susceptible","Infectious","Recovered","Vaccinated","Fully Vaccinated"], colors=['#1e68b3','#b81111','#aaacad','#5e017d','#439603'])
+        plt.stackplot(np.arange(0,self.TotalTime+1, self.dt),SP,IP,RP,V1P,V2P, labels=["Susceptible","Infectious","Recovered","Vaccinated","Fully Vaccinated"], colors=['#1e68b3','#b81111','#aaacad','#5e017d','#439603'])
         plt.savefig("SEIRV2HR_stackplot.png", dpi=227) 
 
 

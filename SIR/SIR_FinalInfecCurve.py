@@ -17,15 +17,15 @@ class SIR_Model():
         kernel = np.ones(kernel_size) / kernel_size
         self.TrueInfectionCurve = np.convolve(infectioncurve, kernel, mode='same')
 
-        self.S_initial = 1 - 0.00008
-        self.I_inital = 0.00008
+        self.S_initial = 1 - 0.0001
+        self.I_inital = 0.0001
         self.population = self.S_initial + self.I_inital
         self.RecoveryRate = 0.1
         self.ContactRate = np.array(COVIDdf['reproduction_rate'])[:1000]*self.RecoveryRate
 
     def NumInt(self):
 
-        S ,I, R, = [self.S_initial], [self.I_inital], [0]
+        S ,I, R, NI = [self.S_initial], [self.I_inital], [0], [0]
 
         for n in np.arange(0,1000):
 
@@ -38,18 +38,19 @@ class SIR_Model():
                S.append(S[n] + dS)
                I.append(I[n] + dI)
                R.append(R[n] + dR)
+               NI.append(self.ContactRate[n]*(I[n]/self.population)*S[n])
 
-        return np.array(S), np.array(I), np.array(R)
+        return np.array(S), np.array(I), np.array(R), np.array(NI)
     
     def Lineplot(self):
-        S,I,R = self.NumInt()
-        plt.plot(self.TrueInfectionCurve, c='#bfacac', label="Infected", ls=":")
-        plt.plot(I, c='#b81111', label="Infected")
+        S,I,R,NI = self.NumInt()
+        #plt.plot(self.TrueInfectionCurve, c='#bfacac', label="Infected", ls=":")
+        plt.plot(NI, c='#b81111', label="Infected")
         plt.title("SIR Numerical Integration")
         plt.ylabel("Population Proportion")
         plt.xlabel("Time (days)")
-        plt.xlim(0,1000)
-        plt.ylim(0,0.003)
+        #plt.xlim(0,1000)
+        #plt.ylim(0,0.003)
         plt.savefig("SIR/SIRFinalInfectionCurve.png", dpi=227)
 
 if __name__ == "__main__":

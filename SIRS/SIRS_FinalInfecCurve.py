@@ -9,7 +9,10 @@ from random import random, randint
 class SIR_Model():
 
     def __init__(self) -> None:
-
+        
+        self.FinalTime = 1000
+        self.dt = 1
+        self.iterations = int(self.FinalTime/self.dt)
         COVIDdf = (pd.read_csv('owid-covid-data-uk.csv')).replace(np.nan, 0)
         
         infectioncurve = np.array(list(np.array(COVIDdf['new_cases_smoothed']))[:1000])/67000000
@@ -28,7 +31,7 @@ class SIR_Model():
 
         S ,I, R, = [self.S_initial], [self.I_inital], [0]
 
-        for n in np.arange(0,1000):
+        for n in np.arange(0,self.iterations):
 
                dS = - self.ContactRate[n]*(I[n]/self.population)*S[n] + self.ImmunityLossRate*R[n]
                dI = self.ContactRate[n]*(I[n]/self.population)*S[n] - self.RecoveryRate*I[n]
