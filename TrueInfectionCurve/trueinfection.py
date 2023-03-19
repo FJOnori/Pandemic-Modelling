@@ -8,7 +8,7 @@ def deathCurve():
 
     cutpoint =180
 
-    dr = np.mean(np.array(COVIDdf['total_cases']) / np.array(COVIDdf['total_deaths']))
+    dr = np.mean(np.array(COVIDdf['total_cases'])[180:280] / np.array(COVIDdf['total_deaths'])[180:280])
     start = list(dr*np.array(COVIDdf['new_deaths_smoothed']))[:cutpoint]
     end = list(np.array(COVIDdf['new_cases_smoothed']))[cutpoint:]
     infectioncurve = np.concatenate((start,end))

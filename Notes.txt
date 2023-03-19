@@ -1,0 +1,8 @@
+
+Basically, the main point I want to touch on is reassurance on the things that I'm not sure on. Those being the jacobain calculations, analysis of the COVIDGE model, and the final results in general.
+
+
+-Double Check Jacobian Mathematics
+-"New infections" results
+-Corrected infection Curve
+-Correctness of parametres

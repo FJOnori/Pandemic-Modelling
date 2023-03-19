@@ -16,21 +16,24 @@ class SIR_Model():
         print(f'Progress: [{arrow}{padding}] {round((fraction*100),5)}%', end=ending)
 
 
-    def __init__(self, FinalTime=1000, dt=0.01, I_initial=0.00005, RecoveryRate=(1/10), GraphRounding=4, ContactFactor=0.98) -> None:
+    def __init__(self, FinalTime=1000, dt=0.01, I_initial=0.00005, RecoveryRate=(1/10), ContactFactor=1) -> None:
 
         COVIDdf             = (pd.read_csv('owid-covid-data-uk.csv')).replace(np.nan, 0)
         
         self.dt             = dt
         self.FinalTime      = FinalTime
         self.iterations     = int(self.FinalTime/self.dt)
+        self.ContactFactor  = ContactFactor
 
         self.population     = 1
         self.I_inital       = I_initial
         self.S_initial      = self.population - I_initial
         
         self.RecoveryRate   = np.round(RecoveryRate,3)
-        self.ContactRate    = np.array(COVIDdf['reproduction_rate'])[:1000]*self.RecoveryRate*ContactFactor
-        self.GraphRounding  = GraphRounding
+
+        start               = self.RecoveryRate*np.array(COVIDdf['reproduction_rate'])[:52]
+        end                 = self.RecoveryRate*ContactFactor*np.array(COVIDdf['reproduction_rate'])[52:1000]
+        self.ContactRate    = np.concatenate((start, end ))
 
     def NumInt(self):
 
@@ -59,13 +62,14 @@ class SIR_Model():
     
     def Lineplot(self):
         S,I,R,NI,T = self.NumInt()
-        plt.plot(T,I*67000000, c='#b81111', label="Infected")
-        plt.title("SIR Model Infections $\gamma = "+ str(self.RecoveryRate) + "$")
+        plt.plot(NI*67000000, c='#b81111', label="Infected")
+        plt.title("SIR Model Infections $\gamma = " + str(self.RecoveryRate) +  ", CF = " + str(self.ContactFactor) + "$")
         plt.ylabel("Infected Population")
         plt.xlabel("Time (days)")
+        plt.ylim(0)
         plt.xlim(0,self.FinalTime)
         plt.grid(ls=":", c="grey", axis='y')
-        plt.savefig("SIR/SIRFinalInfectionCurve-" + str(self.RecoveryRate) + ".png", dpi=227)
+        plt.savefig("SIR/FinalResults/SIRFinalInfectionCurveNewInfections" + str(self.RecoveryRate) + "-" + str(self.ContactFactor) + ".png", dpi=227)
 
 if __name__ == "__main__":
     SIR = SIR_Model()
