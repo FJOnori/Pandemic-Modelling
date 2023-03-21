@@ -18,8 +18,6 @@ class SIR_Model():
 
     def __init__(self, FinalTime=1000, dt=0.01, I_initial=0.00005, RecoveryRate=(1/10), ContactFactor=1) -> None:
 
-        COVIDdf             = (pd.read_csv('owid-covid-data-uk.csv')).replace(np.nan, 0)
-        
         self.dt             = dt
         self.FinalTime      = FinalTime
         self.iterations     = int(self.FinalTime/self.dt)
@@ -28,20 +26,24 @@ class SIR_Model():
         self.I_inital       = I_initial
         self.S_initial      = self.population - I_initial
         self.RecoveryRate   = np.round(RecoveryRate,3)
-        start               = self.RecoveryRate*np.array(COVIDdf['reproduction_rate'])[:52]
-        end                 = self.RecoveryRate*ContactFactor*np.array(COVIDdf['reproduction_rate'])[52:1000]
-        self.ContactRate    = np.concatenate((start, end ))
+        self.popcut          = 0.02
+        self.ContactRateH   = 0.15
+        self.ContactRateL   = 0.1
 
     def NumInt(self):
 
-        S ,I, R, NI, T = [self.S_initial], [self.I_inital], [0], [0],[0]
-        beta = np.repeat(self.ContactRate, self.dt**(-1))
+        S ,I, R, NI, T = [self.S_initial], [self.I_inital], [0], [0], [0]
         NIRT = 0
 
         for n in np.arange(0, self.iterations):
+               
+               if I[n] > self.popcut:
+                    beta = self.ContactRateL
+               elif I[n] <= self.popcut:
+                    beta = self.ContactRateH
 
-               dS = (-beta[n]*(I[n]/self.population)*S[n])*self.dt
-               dI = (beta[n]*(I[n]/self.population)*S[n] - self.RecoveryRate*I[n])*self.dt
+               dS = (-beta*(I[n]/self.population)*S[n])*self.dt
+               dI = (beta*(I[n]/self.population)*S[n] - self.RecoveryRate*I[n])*self.dt
                dR = (self.RecoveryRate*I[n])*self.dt
 
                S.append(S[n] + dS)
@@ -51,7 +53,7 @@ class SIR_Model():
                
                self.progress_bar(n, self.iterations)
             
-               NIRT += (beta[n]*(I[n]/self.population)*S[n])*self.dt
+               NIRT += (beta*(I[n]/self.population)*S[n])*self.dt
                if n%(self.dt**(-1)) == 0:
                     NI.append(NIRT); NIRT = 0
 
@@ -60,13 +62,13 @@ class SIR_Model():
     def Lineplot(self):
         S,I,R,NI,T = self.NumInt()
         plt.plot(NI*67000000, c='#b81111', label="Infected")
-        plt.title("SIR Model Infections $\gamma = " + str(self.RecoveryRate) +  ", CF = " + str(self.ContactFactor) + "$")
+        plt.title("SIR Adaptive Model Infections - " + str(self.ContactRateL) + " - " + str(self.ContactRateH)+ " - " + str(self.popcut))
         plt.ylabel("Infected Population")
         plt.xlabel("Time (days)")
         plt.ylim(0)
         plt.xlim(0,self.FinalTime)
         plt.grid(ls=":", c="grey", axis='y')
-        plt.savefig("SIR/FinalResults/SIRFinalInfectionCurveNewInfections" + str(self.RecoveryRate) + "-" + str(self.ContactFactor) + ".png", dpi=227)
+        plt.savefig("SIRFinalInfectionCurveAdaptive-" + str(self.ContactRateL) + "-" + str(self.ContactRateH) + "-"+str(self.popcut) +".png", dpi=227)
 
 if __name__ == "__main__":
     SIR = SIR_Model()

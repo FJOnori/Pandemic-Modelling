@@ -8,6 +8,7 @@ class SEIRSV2_Model():
 
         COVIDdf                 = (pd.read_csv('owid-covid-data-uk.csv')).replace(np.nan, 0)
         
+        self.rounding           = 4
         self.TotalTime          = 1000 
         self.dt                 = 1
         self.Iterations         = int(self.TotalTime/self.dt)
@@ -34,9 +35,8 @@ class SEIRSV2_Model():
         self.Vaccination1HRRate = 1/50
         self.Vaccination2HRRate = 1/250
 
-        start                   = self.RecoveryRate*np.array(COVIDdf['reproduction_rate'])[:0]
-        end                     = self.RecoveryRate*np.array(COVIDdf['reproduction_rate'])[0:1000]
-        self.ContactRate        = np.concatenate((start, end ))
+        
+        self.ContactRate        = np.array([0.1]*1000)
 
         self.ContactRateV1      = self.ContactRate * 0.19
         self.ContactRateV2      = self.ContactRate * 0.09
@@ -66,35 +66,35 @@ class SEIRSV2_Model():
             NewInfectionsV1HR = self.ContactRateHRV1[n] * InfectionProb * V1HR[n]
             NewInfectionsV2HR = self.ContactRateHRV2[n] * InfectionProb * V2HR[n]
 
-            dS = -NewInfections + self.ImmunityLossRate*R[n] - self.Vaccination1Rate*S[n] + self.Population*self.BirthRateLR - self.DeathRate*S[n]
-            dE = -self.LatencyRate*E[n] + NewInfections - self.DeathRate*E[n]
-            dI = self.LatencyRate*E[n] - self.RecoveryRate*I[n] - self.DeathRateCOVID*I[n]
-            dR = self.RecoveryRate*I[n] - self.ImmunityLossRate*R[n] - self.Vaccination1Rate*R[n] - self.DeathRate*R[n]
+            dS = np.around(-NewInfections + self.ImmunityLossRate*R[n] - self.Vaccination1Rate*S[n] + self.Population*self.BirthRateLR - self.DeathRate*S[n], decimals=self.rounding)
+            dE = np.around(-self.LatencyRate*E[n] + NewInfections - self.DeathRate*E[n], decimals=self.rounding)
+            dI = np.around(self.LatencyRate*E[n] - self.RecoveryRate*I[n] - self.DeathRateCOVID*I[n], decimals=self.rounding)
+            dR = np.around(self.RecoveryRate*I[n] - self.ImmunityLossRate*R[n] - self.Vaccination1Rate*R[n] - self.DeathRate*R[n], decimals=self.rounding)
 
-            dV1 = self.Vaccination1Rate*S[n] - self.Vaccination2Rate*V1[n] - NewInfectionsV1 - self.DeathRate*V1[n] + self.ImmunityLossRate*RV1[n]
-            dEV1 = - self.LatencyRate*EV1[n] + NewInfectionsV1 - self.DeathRate*EV1[n]
-            dIV1 = self.LatencyRate*EV1[n] - self.RecoveryRate*IV1[n] - self.DeathRateCOVIDSV*IV1[n]
-            dRV1 = self.Vaccination1Rate*R[n] + self.RecoveryRate*IV1[n] - self.ImmunityLossRate*RV1[n] - self.Vaccination2Rate*RV1[n] - self.DeathRate*RV1[n]
+            dV1 = np.around(self.Vaccination1Rate*S[n] - self.Vaccination2Rate*V1[n] - NewInfectionsV1 - self.DeathRate*V1[n] + self.ImmunityLossRate*RV1[n], decimals=self.rounding)
+            dEV1 = np.around(- self.LatencyRate*EV1[n] + NewInfectionsV1 - self.DeathRate*EV1[n], decimals=self.rounding)
+            dIV1 = np.around(self.LatencyRate*EV1[n] - self.RecoveryRate*IV1[n] - self.DeathRateCOVIDSV*IV1[n], decimals=self.rounding)
+            dRV1 = np.around(self.Vaccination1Rate*R[n] + self.RecoveryRate*IV1[n] - self.ImmunityLossRate*RV1[n] - self.Vaccination2Rate*RV1[n] - self.DeathRate*RV1[n], decimals=self.rounding)
 
-            dV2 = self.Vaccination2Rate*V1[n] - NewInfectionsV2 - self.DeathRate*V2[n] + self.ImmunityLossRate*RV2[n]
-            dEV2 = NewInfectionsV2 - self.LatencyRate*EV2[n] - self.DeathRate*EV2[n]
-            dIV2 = self.LatencyRate*EV2[n] - self.RecoveryRate*IV2[n] - self.DeathRateCOVIDDV*IV2[n]
-            dRV2 = self.Vaccination2Rate*RV1[n] + self.RecoveryRate*IV2[n] - self.ImmunityLossRate*RV2[n] - self.DeathRate*RV2[n]
+            dV2 = np.around(self.Vaccination2Rate*V1[n] - NewInfectionsV2 - self.DeathRate*V2[n] + self.ImmunityLossRate*RV2[n], decimals=self.rounding)
+            dEV2 = np.around(NewInfectionsV2 - self.LatencyRate*EV2[n] - self.DeathRate*EV2[n], decimals=self.rounding)
+            dIV2 = np.around(self.LatencyRate*EV2[n] - self.RecoveryRate*IV2[n] - self.DeathRateCOVIDDV*IV2[n], decimals=self.rounding)
+            dRV2 = np.around(self.Vaccination2Rate*RV1[n] + self.RecoveryRate*IV2[n] - self.ImmunityLossRate*RV2[n] - self.DeathRate*RV2[n], decimals=self.rounding)
 
-            dSHR = -NewInfectionsHR + self.ImmunityLossRate*RHR[n] - self.Vaccination1HRRate*SHR[n] + self.Population*self.BirthRateHR - self.DeathRate*SHR[n]
-            dEHR = NewInfectionsHR - self.LatencyRate*EHR[n] - self.DeathRate*EHR[n]
-            dIHR = self.LatencyRate*EHR[n] - self.RecoveryRate*IHR[n] - self.DeathRateCOVIDHR*IHR[n]
-            dRHR = -self.ImmunityLossRate*RHR[n] + self.RecoveryRate*IHR[n] - self.Vaccination1HRRate*RHR[n] - self.DeathRate*RHR[n]
+            dSHR = np.around(-NewInfectionsHR + self.ImmunityLossRate*RHR[n] - self.Vaccination1HRRate*SHR[n] + self.Population*self.BirthRateHR - self.DeathRate*SHR[n], decimals=self.rounding)
+            dEHR = np.around(NewInfectionsHR - self.LatencyRate*EHR[n] - self.DeathRate*EHR[n], decimals=self.rounding)
+            dIHR = np.around(self.LatencyRate*EHR[n] - self.RecoveryRate*IHR[n] - self.DeathRateCOVIDHR*IHR[n], decimals=self.rounding)
+            dRHR = np.around(-self.ImmunityLossRate*RHR[n] + self.RecoveryRate*IHR[n] - self.Vaccination1HRRate*RHR[n] - self.DeathRate*RHR[n], decimals=self.rounding)
 
-            dV1HR = self.Vaccination1HRRate*SHR[n] - self.Vaccination2HRRate*V1HR[n] - NewInfectionsV1HR - self.DeathRate*V1HR[n] + self.ImmunityLossRate*RV1HR[n]
-            dEV1HR = NewInfectionsV1HR - self.LatencyRate*EV1HR[n] - self.DeathRate*EV1HR[n]
-            dIV1HR = self.LatencyRate*EV1HR[n] - self.RecoveryRate*IV1HR[n] - self.DeathRateCOVIDSVHR*V1HR[n]
-            dRV1HR = self.Vaccination1HRRate*RHR[n] + self.RecoveryRate*IV1HR[n] - self.ImmunityLossRate*RV1HR[n] - self.Vaccination2HRRate*RV1HR[n] - self.DeathRate*RV1HR[n]
+            dV1HR = np.around(self.Vaccination1HRRate*SHR[n] - self.Vaccination2HRRate*V1HR[n] - NewInfectionsV1HR - self.DeathRate*V1HR[n] + self.ImmunityLossRate*RV1HR[n], decimals=self.rounding)
+            dEV1HR = np.around(NewInfectionsV1HR - self.LatencyRate*EV1HR[n] - self.DeathRate*EV1HR[n], decimals=self.rounding)
+            dIV1HR = np.around(self.LatencyRate*EV1HR[n] - self.RecoveryRate*IV1HR[n] - self.DeathRateCOVIDSVHR*V1HR[n], decimals=self.rounding)
+            dRV1HR = np.around(self.Vaccination1HRRate*RHR[n] + self.RecoveryRate*IV1HR[n] - self.ImmunityLossRate*RV1HR[n] - self.Vaccination2HRRate*RV1HR[n] - self.DeathRate*RV1HR[n], decimals=self.rounding)
 
-            dV2HR = self.Vaccination2HRRate*V1HR[n] - NewInfectionsV2HR - self.DeathRate*V2HR[n] + self.ImmunityLossRate*RV2HR[n]
-            dEV2HR = NewInfectionsV2HR - self.LatencyRate*EV2HR[n] - self.DeathRate*EV2HR[n]
-            dIV2HR = self.LatencyRate*EV2HR[n] - self.RecoveryRate*IV2HR[n] - self.DeathRateCOVIDDVHR*IV2HR[n]
-            dRV2HR = self.Vaccination2HRRate*RV1HR[n] + self.RecoveryRate*IV2HR[n] - self.ImmunityLossRate*RV2HR[n] - self.DeathRate*RV2HR[n]
+            dV2HR = np.around(self.Vaccination2HRRate*V1HR[n] - NewInfectionsV2HR - self.DeathRate*V2HR[n] + self.ImmunityLossRate*RV2HR[n], decimals=self.rounding)
+            dEV2HR = np.around(NewInfectionsV2HR - self.LatencyRate*EV2HR[n] - self.DeathRate*EV2HR[n], decimals=self.rounding)
+            dIV2HR = np.around(self.LatencyRate*EV2HR[n] - self.RecoveryRate*IV2HR[n] - self.DeathRateCOVIDDVHR*IV2HR[n], decimals=self.rounding)
+            dRV2HR = np.around(self.Vaccination2HRRate*RV1HR[n] + self.RecoveryRate*IV2HR[n] - self.ImmunityLossRate*RV2HR[n] - self.DeathRate*RV2HR[n], decimals=self.rounding)
 
             self.Population += (dS+dE+dI+dR+dV1+dV2+dEV1+dEV2+dIV1+dIV2+dSHR+dEHR+\
                                 dIHR+dRHR+dV1HR+dEV1HR+dIV1HR+dV2HR+dEV2HR+dIV2HR+\
@@ -117,7 +117,8 @@ class SEIRSV2_Model():
         plt.xlabel("Time (Days)")
         plt.ylabel("Proportion of Population")
         plt.legend()
-        plt.savefig("COVIDGE Final.png", dpi=227) 
+        #plt.savefig("COVIDGE Final.png", dpi=227)
+        plt.show()
 
        
 if __name__ == "__main__":
