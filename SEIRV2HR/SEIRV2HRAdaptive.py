@@ -7,7 +7,7 @@ class SEIRSV2_Model():
     def __init__(self):
         
         self.TotalTime          = 1000 
-        self.dt                 = 1
+        self.dt                 = 0.01
         self.Iterations         = int(self.TotalTime/self.dt)
         self.PopulationLR       = 0.9
         self.PopulationHR       = 0.1
@@ -25,8 +25,11 @@ class SEIRSV2_Model():
         self.DeathRateCOVIDSVHR = self.DeathRateCOVIDHR * 0.19
         self.DeathRateCOVIDDVHR = self.DeathRateCOVIDHR * 0.09
 
-        self.ContactRateH       = 1/14
-        self.ContactRateL       = 1/7
+        self.ContactRate        = 1/3
+        self.ContactRateH       = np.round(1/3, 4)
+        self.ContactRateL       = np.round(1/14, 4)
+        self.PopulationCut      = 0.1
+
         self.ContactRateV1      = self.ContactRate * 0.19
         self.ContactRateV2      = self.ContactRate * 0.09
         self.ContactRateHR      = self.ContactRate * 2
@@ -35,10 +38,28 @@ class SEIRSV2_Model():
         self.LatencyRate        = 1/3
         self.RecoveryRate       = 1/10
         self.ImmunityLossRate   = 1/210
-        self.Vaccination1Rate   = 1/500
-        self.Vaccination2Rate   = 1/500
-        self.Vaccination1HRRate = 1/50
-        self.Vaccination2HRRate = 1/250
+        
+        self.Vaccination1Rate   = 1/1000
+        self.Vaccination2Rate   = 1/1000
+        self.Vaccination1HRRate = 1/100
+        self.Vaccination2HRRate = 1/500
+
+        self.Vaccination1RateH   = 1/500
+        self.Vaccination2RateH   = 1/500
+        self.Vaccination1HRRateH = 1/50
+        self.Vaccination2HRRateH = 1/250
+
+        self.Vaccination1RateL   = 0
+        self.Vaccination2RateL   = 0
+        self.Vaccination1HRRateL = 0
+        self.Vaccination2HRRateL = 0
+
+    def progress_bar(self, current, total, bar_length=100):
+        fraction = current / total
+        arrow = int(fraction * bar_length - 1) * '-' + '>'
+        padding = int(bar_length - len(arrow)) * ' '
+        ending = '\n' if current == total else '\r'
+        print(f'Progress: [{arrow}{padding}] {round((fraction*100),5)}%', end=ending)
 
     def NumInt(self):
 
@@ -49,22 +70,41 @@ class SEIRSV2_Model():
         V1HR = [0]; EV1HR = [0]; IV1HR = [0]; RV1HR = [0]
         V2HR = [0]; EV2HR = [0]; IV2HR = [0]; RV2HR = [0]
 
+        time = [0]
+
+        self.Vaccination1Rate   = self.Vaccination1RateL
+        self.Vaccination2Rate   = self.Vaccination2RateL
+        self.Vaccination1HRRate = self.Vaccination1HRRateL 
+        self.Vaccination2HRRate = self.Vaccination2HRRateL
+
         dt = self.dt
 
         for n in range(0,self.Iterations):
 
-            InfectionProb = (I[n]+E[n]+IV1[n]+EV1[n]+EV2[n]+IV2[n]+EHR[n]+IHR[n]+EV1HR[n]+IV1HR[n]+EV2HR[n]+IV2HR[n])/self.Population
+            self.progress_bar(n, self.Iterations)
 
-            if InfectionProb*self.Population > 0.1:
-                self.ContactRate = self.con
+
+            if I[n] > self.PopulationCut:
+                self.ContactRate        = self.ContactRateL
+                self.ContactRateV1      = self.ContactRateL * 0.19
+                self.ContactRateV2      = self.ContactRateL * 0.09
+                self.ContactRateHR      = self.ContactRateL * 2
+                self.ContactRateHRV1    = self.ContactRateHR * 0.19
+                self.ContactRateHRV2    = self.ContactRateHR * 0.09
+                self.Vaccination1Rate   = self.Vaccination1RateH
+                self.Vaccination2Rate   = self.Vaccination2RateH
+                self.Vaccination1HRRate = self.Vaccination1HRRateH 
+                self.Vaccination2HRRate = self.Vaccination2HRRateH
             else:
-                self.ContactRate = 1/14
+                self.ContactRate        = self.ContactRateH
+                self.ContactRateV1      = self.ContactRateH * 0.19
+                self.ContactRateV2      = self.ContactRateH * 0.09
+                self.ContactRateHR      = self.ContactRateH * 2
+                self.ContactRateHRV1    = self.ContactRateHR * 0.19
+                self.ContactRateHRV2    = self.ContactRateHR * 0.09
+                
 
-            self.ContactRateV1      = self.ContactRate * 0.19
-            self.ContactRateV2      = self.ContactRate * 0.09
-            self.ContactRateHR      = self.ContactRate * 2
-            self.ContactRateHRV1    = self.ContactRateHR * 0.19
-            self.ContactRateHRV2    = self.ContactRateHR * 0.09
+            InfectionProb = (I[n]+E[n]+IV1[n]+EV1[n]+EV2[n]+IV2[n]+EHR[n]+IHR[n]+EV1HR[n]+IV1HR[n]+EV2HR[n]+IV2HR[n])/self.Population
             
             NewInfections = self.ContactRate * InfectionProb * S[n]
             NewInfectionsV1 = self.ContactRateV1 * InfectionProb * V1[n]
@@ -106,6 +146,9 @@ class SEIRSV2_Model():
             self.Population += (dS+dE+dI+dR+dV1+dV2+dEV1+dEV2+dIV1+dIV2+dSHR+dEHR+\
                                 dIHR+dRHR+dV1HR+dEV1HR+dIV1HR+dV2HR+dEV2HR+dIV2HR+\
                                 dRV1+dRV2+dRV1HR+dRV2HR)*dt
+            
+
+            time.append(time[n] + self.dt)
 
             S.append(S[n] + dS*dt); E.append(E[n] + dE*dt); I.append(I[n] + dI*dt); R.append(R[n] + dR*dt)
             V1.append(V1[n] + dV1*dt); EV1.append(EV1[n] + dEV1*dt); IV1.append(IV1[n] + dIV1*dt); RV1.append(RV1[n] + dRV1*dt)
@@ -114,35 +157,19 @@ class SEIRSV2_Model():
             V1HR.append(V1HR[n] + dV1HR*dt); EV1HR.append(EV1HR[n] + dEV1HR*dt); IV1HR.append(IV1HR[n] + dIV1HR*dt); RV1HR.append(RV1HR[n] + dRV1HR*dt)
             V2HR.append(V2HR[n] + dV2HR*dt); EV2HR.append(EV2HR[n] + dEV2HR*dt); IV2HR.append(IV2HR[n] + dIV2HR*dt); RV2HR.append(RV2HR[n] + dRV2HR*dt)
 
-        SP = np.array(S) + np.array(SHR)
         IP = np.array(I) + np.array(IV1) + np.array(IV2) + np.array(IHR) + np.array(IV1HR) + np.array(IV2HR) +\
              np.array(E) + np.array(EV1) + np.array(EV2) + np.array(EHR) + np.array(EV1HR) + np.array(EV2HR)
-        RP = np.array(R) + np.array(RHR) + np.array(RV1) + np.array(RV2) + np.array(RV1HR) + np.array(RV2HR)
-        V1P = np.array(V1) + np.array(V1HR)
-        V2P = np.array(V2) + np.array(V2HR)
-        
-        plt.plot(SP, label = "Susceptible", c = '#1e68b3')
-        plt.plot(IP, label = "Infectious", c = '#b81111')
-        plt.plot(RP, label = "Recovered", c = '#aaacad')
-        plt.plot(V1P, label = "Vaccinated", c = '#5e017d')
-        plt.plot(V2P, label = "Fully Vaccinated", c = '#439603')
 
+        
+        plt.plot(time, IP, label = "Infectious", c = '#b81111')
         plt.xlim(0,self.TotalTime)
-        plt.title("SEIRV2HR Model Lineplot")
+        plt.title("COVIDGE Model Lineplot - " + str(self.ContactRateL) + " - " + str(self.ContactRateH) + " - " + str(self.PopulationCut))
         plt.xlabel("Time (Days)")
         plt.ylabel("Proportion of Population")
-        plt.legend()
-        plt.savefig("SEIRV2HR_lineplot.png", dpi=227) 
-        plt.close()
-        
+        plt.savefig("COVIDGElineplot - " + str(self.ContactRateL) + " - " + str(self.ContactRateH) + " - " + str(self.PopulationCut) + ".png", dpi=227) 
+   
         
 
-        plt.title("SEIRV2HR Model Stackplot")
-        plt.xlim(0,self.TotalTime)
-        plt.xlabel("Time (Days)")
-        plt.ylabel("Proportion of Population")
-        plt.stackplot(np.arange(0,self.TotalTime+1, self.dt),SP,IP,RP,V1P,V2P, labels=["Susceptible","Infectious","Recovered","Vaccinated","Fully Vaccinated"], colors=['#1e68b3','#b81111','#aaacad','#5e017d','#439603'])
-        plt.savefig("SEIRV2HR_stackplot.png", dpi=227) 
 
 
 if __name__ == "__main__":
