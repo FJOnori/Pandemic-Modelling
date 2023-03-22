@@ -34,10 +34,10 @@ class SEIRSV2_Model():
         self.LatencyRate        = 1/3
         self.RecoveryRate       = 1/10
         self.ImmunityLossRate   = 1/210
-        self.Vaccination1Rate   = 1/500
-        self.Vaccination2Rate   = 1/500
-        self.Vaccination1HRRate = 1/50
-        self.Vaccination2HRRate = 1/250
+        self.Vaccination1Rate   = 0
+        self.Vaccination2Rate   = 0
+        self.Vaccination1HRRate = 0
+        self.Vaccination2HRRate = 0
 
     def NumInt(self):
 
@@ -51,6 +51,12 @@ class SEIRSV2_Model():
         dt = self.dt
 
         for n in range(0,self.Iterations):
+
+            if n == 313:
+                self.Vaccination1Rate   = 1/500
+                self.Vaccination2Rate   = 1/500
+                self.Vaccination1HRRate = 1/50
+                self.Vaccination2HRRate = 1/250
 
             InfectionProb = (I[n]+E[n]+IV1[n]+EV1[n]+EV2[n]+IV2[n]+EHR[n]+IHR[n]+EV1HR[n]+IV1HR[n]+EV2HR[n]+IV2HR[n])/self.Population
             
@@ -83,7 +89,7 @@ class SEIRSV2_Model():
 
             dV1HR = self.Vaccination1HRRate*SHR[n] - self.Vaccination2HRRate*V1HR[n] - NewInfectionsV1HR - self.DeathRate*V1HR[n] + self.ImmunityLossRate*RV1HR[n]
             dEV1HR = NewInfectionsV1HR - self.LatencyRate*EV1HR[n] - self.DeathRate*EV1HR[n]
-            dIV1HR = self.LatencyRate*EV1HR[n] - self.RecoveryRate*IV1HR[n] - self.DeathRateCOVIDSVHR*V1HR[n]
+            dIV1HR = self.LatencyRate*EV1HR[n] - self.RecoveryRate*IV1HR[n] - self.DeathRateCOVIDSVHR*IV1HR[n]
             dRV1HR = self.Vaccination1HRRate*RHR[n] + self.RecoveryRate*IV1HR[n] - self.ImmunityLossRate*RV1HR[n] - self.Vaccination2HRRate*RV1HR[n] - self.DeathRate*RV1HR[n]
 
             dV2HR = self.Vaccination2HRRate*V1HR[n] - NewInfectionsV2HR - self.DeathRate*V2HR[n] + self.ImmunityLossRate*RV2HR[n]

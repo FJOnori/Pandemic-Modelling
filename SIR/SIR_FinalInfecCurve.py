@@ -16,7 +16,7 @@ class SIR_Model():
         print(f'Progress: [{arrow}{padding}] {round((fraction*100),5)}%', end=ending)
 
 
-    def __init__(self, FinalTime=1000, dt=0.01, I_initial=0.00005, RecoveryRate=(1/10), ContactFactor=1) -> None:
+    def __init__(self, FinalTime=1000, dt=0.01, I_initial=0.000001, RecoveryRate=(1/10), ContactFactor=1) -> None:
 
         COVIDdf             = (pd.read_csv('owid-covid-data-uk.csv')).replace(np.nan, 0)
         
@@ -66,7 +66,7 @@ class SIR_Model():
         plt.ylim(0)
         plt.xlim(0,self.FinalTime)
         plt.grid(ls=":", c="grey", axis='y')
-        plt.savefig("SIR/FinalResults/SIRFinalInfectionCurveNewInfections" + str(self.RecoveryRate) + "-" + str(self.ContactFactor) + ".png", dpi=227)
+        plt.savefig("SIRFinalInfectionCurveNewInfections" + str(self.RecoveryRate) + "-" + str(self.ContactFactor) + ".png", dpi=227)
 
 if __name__ == "__main__":
     SIR = SIR_Model()

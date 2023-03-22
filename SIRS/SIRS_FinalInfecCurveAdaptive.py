@@ -8,7 +8,7 @@ from random import random, randint
 
 class SIR_Model():
 
-    def __init__(self, FinalTime=1000, dt=0.01, I_initial=0.00002, RecoveryRate=(1/7), ContactFactor=1.20) -> None:
+    def __init__(self, FinalTime=1000, dt=0.01, I_initial=0.000001, RecoveryRate=(1/12), ContactFactor=1.20) -> None:
         
         self.FinalTime = FinalTime
         self.ContactFactor = ContactFactor
@@ -26,7 +26,7 @@ class SIR_Model():
         self.S_initial = self.population - self.I_inital
         
         self.RecoveryRate = np.round(RecoveryRate,3)
-        self.popcut = 0.02
+        self.popcut = 0.01
         self.ImmunityLossRate = 1/365
         self.ContactRateH   = 0.15
         self.ContactRateL   = 0.1
@@ -41,38 +41,47 @@ class SIR_Model():
     def NumInt(self):
 
         S ,I, R, T = [self.S_initial], [self.I_inital], [0], [0]
-        
-        
 
-        for n in np.arange(0,self.iterations):
-               
-               if I[n] > self.popcut:
-                   beta = self.ContactRateL
-               elif I[n] <= self.popcut:
-                   beta = self.ContactRateH
+        IA = []
+        for b in np.arange(0.1,0.22,0.02):
+            
+            S ,I, R, T = [self.S_initial], [self.I_inital], [0], [0]
 
-               dS = (-beta*(I[n]/self.population)*S[n] + self.ImmunityLossRate*R[n])*self.dt
-               dI = (beta*(I[n]/self.population)*S[n] - self.RecoveryRate*I[n])*self.dt
-               dR = (self.RecoveryRate*I[n] - self.ImmunityLossRate*R[n])*self.dt
+            for n in np.arange(0, self.iterations):
+                
+                if I[n] > self.popcut: beta = b
+                elif I[n] <= self.popcut: beta = b
 
-               self.progress_bar(n, self.iterations)
+                dS = (-beta*(I[n]/self.population)*S[n] + self.ImmunityLossRate*R[n])*self.dt
+                dI = (beta*(I[n]/self.population)*S[n] - self.RecoveryRate*I[n])*self.dt
+                dR = (self.RecoveryRate*I[n] - self.ImmunityLossRate*R[n])*self.dt
 
-               S.append(S[n] + dS)
-               I.append(I[n] + dI)
-               R.append(R[n] + dR)
-               T.append(self.dt*n)
+                S.append(S[n] + dS)
+                I.append(I[n] + dI)
+                R.append(R[n] + dR)
+                T.append(self.dt*n)
+                
+                self.progress_bar(n, self.iterations)
+            
+            print()
+            IA.append(I)
 
-        return np.array(S), np.array(I), np.array(R), np.array(T)
-    
+        return IA, T
+
+
     def Lineplot(self):
-        S,I,R,T = self.NumInt()
-        plt.plot(T,I*67000000, c='#b81111', label="Infected")
-        plt.title("SIRS Adaptive Model Infections - " + str(self.ContactRateL) + " - " + str(self.ContactRateH) + " - " + str(self.popcut))
-        plt.ylabel("Infected Population")
+        IA, T = self.NumInt()
+        labels = np.arange(0.1,0.22,0.02)
+        for j in range(0, len(IA)):
+            plt.plot(T, IA[j], label=str(np.round(labels[j],2)), ls="--", alpha=0.8)
+
+        plt.title("SIRS Adaptive Model Infections ")
+        plt.ylabel("Infected Proportion of Population")
         plt.xlabel("Time (days)")
         plt.ylim(0)
         plt.xlim(0,self.FinalTime)
         plt.grid(ls=":", c="grey", axis='y')
+        plt.legend()
         plt.savefig("SIRSFinalInfectionCurveAdaptive-" + str(self.ContactRateL) + "-" + str(self.ContactRateH) + "-" + str(self.popcut)+".png", dpi=227)
 
 if __name__ == "__main__":

@@ -8,7 +8,7 @@ from random import random, randint
 
 class SIR_Model():
 
-    def __init__(self, FinalTime=1000, dt=0.01, I_initial=0.00002, RecoveryRate=(1/7), ContactFactor=1.20) -> None:
+    def __init__(self, FinalTime=1000, dt=0.01, I_initial=0.00001, RecoveryRate=(1/7), ContactFactor=1.2) -> None:
         
         self.FinalTime = FinalTime
         self.ContactFactor = ContactFactor
@@ -64,13 +64,13 @@ class SIR_Model():
     def Lineplot(self):
         S,I,R,T = self.NumInt()
         plt.plot(T,I*67000000, c='#b81111', label="Infected")
-        plt.title("SIR Model Infections $\gamma = " + str(self.RecoveryRate) +  ", CF = " + str(self.ContactFactor) + "$")
+        plt.title("SIRS Model Infections CF = " + str(self.ContactFactor))
         plt.ylabel("Infected Population")
         plt.xlabel("Time (days)")
         plt.ylim(0)
         plt.xlim(0,self.FinalTime)
         plt.grid(ls=":", c="grey", axis='y')
-        plt.savefig("SIRS/FinalResults/SIRFinalInfectionCurveLockdown-" + str(self.RecoveryRate) + "-" + str(self.ContactFactor) + ".png", dpi=227)
+        plt.savefig("SIRSFinalInfectionCurve - " + str(self.ContactFactor) + ".png", dpi=227)
 
 if __name__ == "__main__":
     SIR = SIR_Model()
