@@ -81,11 +81,11 @@ def grid_sim(simtime=200, gridsize=100):
         plt.plot(I, c='#b81111', label="Infected")
         plt.plot(R, c='#aaacad', label="Recovered")
         plt.title("SIR Grid Simulation")
-        plt.ylabel("Population Proportion")
+        plt.ylabel("Population")
         plt.xlabel("Time (days)")
         plt.xlim(0,simtime)
         plt.ylim(0,gridsize**2)
         plt.legend()
-        plt.savefig("SIR/SIRgridsim.png", dpi=227)
+        plt.savefig("SIRgridsim.png", dpi=227)
            
 grid_sim()

@@ -9,7 +9,7 @@ def deathCurve():
     
     COVIDdf = (pd.read_csv('owid-covid-data-uk.csv')).replace(np.nan, 0)
     dr = np.mean( shift(np.array(COVIDdf['new_cases_smoothed'])[109:313], -10,cval=0)  / np.array(COVIDdf['new_deaths_smoothed'])[109:313] )
-    infec = shift(dr*np.array(COVIDdf['new_deaths_smoothed']), -10, cval=0)
+    infec = shift(dr*np.array(COVIDdf['new_deaths_smoothed']), -14, cval=0)
     recinfec = np.array(COVIDdf['new_cases_smoothed'])
  
     plt.grid(ls=":",c='grey',axis='y')

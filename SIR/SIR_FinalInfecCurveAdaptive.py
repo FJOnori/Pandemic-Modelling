@@ -16,7 +16,11 @@ class SIR_Model():
         print(f'Progress: [{arrow}{padding}] {round((fraction*100),5)}%', end=ending)
 
 
-    def __init__(self, FinalTime=1000, dt=0.01, I_initial=0.000001, RecoveryRate=(1/10), ContactFactor=1) -> None:
+    def __init__(self, FinalTime=1000, dt=0.01, I_initial=0.0001, RecoveryRate=(1/10), ContactFactor=1) -> None:
+
+        COVIDdf = (pd.read_csv('owid-covid-data-uk.csv')).replace(np.nan, 0)
+
+        self.co
 
         self.dt             = dt
         self.FinalTime      = FinalTime
@@ -26,24 +30,22 @@ class SIR_Model():
         self.I_inital       = I_initial
         self.S_initial      = self.population - I_initial
         self.RecoveryRate   = np.round(RecoveryRate,3)
-        self.popcut         = 0.02
-        self.ContactRateH   = 0.2
-        self.ContactRateL   = 0.2
+        self.popcut         = 0.01
+        self.ContactRateH   = self.RecoveryRate*np.array(COVIDdf['reproduction_rate'])[:52]
+        self.ContactRateL   = self.RecoveryRate*(ContactFactor)*np.array(COVIDdf['reproduction_rate'])[52:1000]
 
     def NumInt(self):
 
         IA = []
-        for b in np.arange(0.12,0.22,0.02):
+        for b in np.linspace(self.ContactRateL,self.ContactRateH,5):
             
             S ,I, R, T = [self.S_initial], [self.I_inital], [0], [0]
 
-            for n in np.arange(0, self.iterations):
-                
-                if I[n] > self.popcut: beta = b
-                elif I[n] <= self.popcut: beta = b
+            beta = np.concatenate(self.ContactRateH, self.ContactRateL)
 
-                dS = (-beta*(I[n]/self.population)*S[n])*self.dt
-                dI = (beta*(I[n]/self.population)*S[n] - self.RecoveryRate*I[n])*self.dt
+            for n in np.arange(0, self.iterations):                
+                dS = (-beta[n]*(I[n]/self.population)*S[n])*self.dt
+                dI = (beta[n]*(I[n]/self.population)*S[n] - self.RecoveryRate*I[n])*self.dt
                 dR = (self.RecoveryRate*I[n])*self.dt
 
                 S.append(S[n] + dS)
@@ -54,24 +56,24 @@ class SIR_Model():
                 self.progress_bar(n, self.iterations)
             
             print()
-            IA.append(I)
+            IA.append(np.array(I)*67000000)
 
-        return IA, T
+        return np.array(IA), np.array(T)
     
     def Lineplot(self):
         IA, T = self.NumInt()
-        labels = np.arange(0.12,0.22,0.02)
+        labels = np.round(np.linspace(self.ContactRateL,self.ContactRateH,5),4)
         for j in range(0, len(IA)):
             plt.plot(T, IA[j], label=str(np.round(labels[j],2)), ls="--", alpha=0.8)
 
-        plt.title("SIR Adaptive Model Infections")
-        plt.ylabel("Infected Proportion of Population")
+        plt.title("SIR Adaptive Model, Population Cutoff = " + str(self.popcut))
+        plt.ylabel("Infected Population")
         plt.xlabel("Time (days)")
-        plt.ylim(0,0.16)
+        plt.ylim(0)
         plt.xlim(0,self.FinalTime)
         plt.grid(ls=":", c="grey", axis='y')
         plt.legend()
-        plt.savefig("SIRFinalInfectionCurveAdaptive-" + str(self.ContactRateL) + "-" + str(self.ContactRateH) + "-"+str(self.popcut) +".png", dpi=227)
+        plt.savefig("SIRFinalInfectionCurveLockdown - " + str(self.popcut) + ".png", dpi=227)
 
 if __name__ == "__main__":
     SIR = SIR_Model()

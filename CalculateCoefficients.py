@@ -9,6 +9,14 @@ from random import random, randint
 
 COVIDdf = (pd.read_csv('owid-covid-data-uk.csv')).replace(np.nan, 0)
 
+
+def ContactRateH():
+    betah = (1/10) * (np.array(COVIDdf['reproduction_rate']))[30:53]
+    betal = (1/10) * (np.array(COVIDdf['reproduction_rate']))[53:113]
+    print(np.mean(betah))
+    print(np.mean(betal))
+
+
 def COVIDdeathrate():
     d = np.array(COVIDdf['total_deaths'])
     c = np.array(COVIDdf['total_cases'])
@@ -22,4 +30,4 @@ def deathrate():
 def birthrate():
     pass
 
-COVIDdeathrate()
+ContactRateH()

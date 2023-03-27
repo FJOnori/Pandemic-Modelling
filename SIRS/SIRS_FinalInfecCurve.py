@@ -8,7 +8,7 @@ from random import random, randint
 
 class SIR_Model():
 
-    def __init__(self, FinalTime=1000, dt=0.01, I_initial=0.00001, RecoveryRate=(1/7), ContactFactor=1.2) -> None:
+    def __init__(self, FinalTime=1000, dt=0.01, I_initial=0.0001, RecoveryRate=(1/10), ContactFactor=0.90) -> None:
         
         self.FinalTime = FinalTime
         self.ContactFactor = ContactFactor
@@ -44,7 +44,7 @@ class SIR_Model():
     def NumInt(self):
 
         S ,I, R, T = [self.S_initial], [self.I_inital], [0], [0]
-        beta = np.repeat(self.ContactRate, self.dt**(-1))
+        beta = np.repeat(self.ContactRate, self.dt**(-1))*(self.ContactFactor)
 
         for n in np.arange(0,self.iterations):
 

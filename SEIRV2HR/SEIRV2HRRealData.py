@@ -11,8 +11,8 @@ class SEIRSV2_Model():
         self.TotalTime          = 1000 
         self.dt                 = 0.01
         self.Iterations         = int(self.TotalTime/self.dt)
-        self.InitalExposuresLR  = 0.000001
-        self.InitalExposuresHR  = 0.000001
+        self.InitalExposuresLR  = 0.00005
+        self.InitalExposuresHR  = 0.00005
         self.PopulationLR       = 0.9 - self.InitalExposuresLR
         self.PopulationHR       = 0.1 - self.InitalExposuresHR
         self.Population         = self.PopulationLR + self.PopulationHR + self.InitalExposuresLR + self.InitalExposuresHR
@@ -27,15 +27,15 @@ class SEIRSV2_Model():
         self.DeathRateCOVIDSVHR = self.DeathRateCOVIDHR * 0.19
         self.DeathRateCOVIDDVHR = self.DeathRateCOVIDHR * 0.09
 
-        self.LatencyRate        = 1/3
-        self.RecoveryRate       = 1/8
+        self.LatencyRate        = 1/6
+        self.RecoveryRate       = 1/14
         self.ImmunityLossRate   = 1/210
-        self.Vaccination1Rate   = np.repeat( np.concatenate((np.array([0]*313), np.array([1/5000]*787))), self.dt**(-1) )
-        self.Vaccination2Rate   = np.repeat( np.concatenate((np.array([0]*313), np.array([1/5000]*787))), self.dt**(-1) )
-        self.Vaccination1HRRate = np.repeat( np.concatenate((np.array([0]*313), np.array([1/5000]*787))), self.dt**(-1) )
-        self.Vaccination2HRRate = np.repeat( np.concatenate((np.array([0]*313), np.array([1/5000]*787))), self.dt**(-1) )
+        self.Vaccination1Rate   = np.repeat( np.concatenate((np.array([0]*313), np.array([1/100]*787))), self.dt**(-1) )
+        self.Vaccination2Rate   = np.repeat( np.concatenate((np.array([0]*313), np.array([1/100]*787))), self.dt**(-1) )
+        self.Vaccination1HRRate = np.repeat( np.concatenate((np.array([0]*313), np.array([1/50]*787))), self.dt**(-1) )
+        self.Vaccination2HRRate = np.repeat( np.concatenate((np.array([0]*313), np.array([1/50]*787))), self.dt**(-1) )
 
-        self.ContactFactor      = 0.95
+        self.ContactFactor      = 1.1
         self.ContactRate        = np.repeat( self.ContactFactor*self.RecoveryRate*np.array(COVIDdf['reproduction_rate'])[:1000], self.dt**(-1) )
         self.ContactRateV1      = self.ContactRate * 0.19
         self.ContactRateV2      = self.ContactRate * 0.09
@@ -111,7 +111,8 @@ class SEIRSV2_Model():
             self.PopulationHR += (dSHR+dEHR+dIHR+dRHR+dV1HR+dEV1HR+dIV1HR+dV2HR+dEV2HR+dIV2HR+dRV1+dRV2+dRV1HR+dRV2HR)*dt
             self.Population = (self.PopulationLR + self.PopulationHR)
             
-            time.append(time[n] + self.dt)
+            time.append(n * self.dt)
+            Deaths.append((self.DeathRateCOVID*I[n] + self.DeathRateCOVIDSV*IV1[n] + self.DeathRateCOVIDDV*IV2[n] + self.DeathRateCOVIDHR*IHR[n] + self.DeathRateCOVIDSVHR*IV1HR[n] + self.DeathRateCOVIDDVHR*IV2HR[n])*self.dt)
 
             S.append(S[n] + dS*dt); E.append(E[n] + dE*dt); I.append(I[n] + dI*dt); R.append(R[n] + dR*dt)
             V1.append(V1[n] + dV1*dt); EV1.append(EV1[n] + dEV1*dt); IV1.append(IV1[n] + dIV1*dt); RV1.append(RV1[n] + dRV1*dt)
@@ -120,15 +121,17 @@ class SEIRSV2_Model():
             V1HR.append(V1HR[n] + dV1HR*dt); EV1HR.append(EV1HR[n] + dEV1HR*dt); IV1HR.append(IV1HR[n] + dIV1HR*dt); RV1HR.append(RV1HR[n] + dRV1HR*dt)
             V2HR.append(V2HR[n] + dV2HR*dt); EV2HR.append(EV2HR[n] + dEV2HR*dt); IV2HR.append(IV2HR[n] + dIV2HR*dt); RV2HR.append(RV2HR[n] + dRV2HR*dt)
 
-        IP = np.array(I) + np.array(IV1) + np.array(IV2) + np.array(IHR) + np.array(IV1HR) + np.array(IV2HR)
+        IP = np.array(I) + np.array(IV1) + np.array(IV2) + np.array(IHR) + np.array(IV1HR) + np.array(IV2HR) + \
+             np.array(E) + np.array(EV1) + np.array(EV2) + np.array(EHR) + np.array(EV1HR) + np.array(EV2HR)
+        
         
         plt.plot(time, IP*67000000, label = "Infectious", c = '#b81111')
         plt.xlim(0,self.TotalTime)
-        plt.title("SEIRV2HR Model Lineplot")
+        plt.title("COVIDGE Model Lineplot, CF = " + str(self.ContactFactor))
         plt.xlabel("Time (Days)")
         plt.ylabel("Proportion of Population")
         plt.grid(ls=":", c="grey", axis='y')
-        plt.savefig("COVIDGEMultipliedCoefficients - " + str(self.ContactFactor) + " - " + str(self.RecoveryRate) + ".png", dpi=227)
+        plt.savefig("COVIDGEMultipliedCoefficients - " + str(self.ContactFactor) + " - " + str(Deaths[-1]*67000000) +  ".png", dpi=227)
 
 if __name__ == "__main__":
     SEIRSV2 = SEIRSV2_Model()

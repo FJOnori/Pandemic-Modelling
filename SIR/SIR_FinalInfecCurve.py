@@ -16,7 +16,7 @@ class SIR_Model():
         print(f'Progress: [{arrow}{padding}] {round((fraction*100),5)}%', end=ending)
 
 
-    def __init__(self, FinalTime=1000, dt=0.01, I_initial=0.000001, RecoveryRate=(1/10), ContactFactor=1) -> None:
+    def __init__(self, FinalTime=1000, dt=0.01, I_initial=0.0001, RecoveryRate=(1/10), ContactFactor=1) -> None:
 
         COVIDdf             = (pd.read_csv('owid-covid-data-uk.csv')).replace(np.nan, 0)
         
@@ -51,19 +51,15 @@ class SIR_Model():
                
                self.progress_bar(n, self.iterations)
             
-               NIRT += (beta[n]*(I[n]/self.population)*S[n])*self.dt
-               if n%(self.dt**(-1)) == 0:
-                    NI.append(NIRT); NIRT = 0
-
-        return np.array(S), np.array(I), np.array(R), np.array(NI), np.array(T)
+               
+        return np.array(S), np.array(I), np.array(R), np.array(T)
     
     def Lineplot(self):
-        S,I,R,NI,T = self.NumInt()
-        plt.plot(NI*67000000, c='#b81111', label="Infected")
+        S,I,R,T = self.NumInt()
+        plt.plot(T, I*67000000, c='#b81111', label="Infected")
         plt.title("SIR Model Infections $\gamma = " + str(self.RecoveryRate) +  ", CF = " + str(self.ContactFactor) + "$")
         plt.ylabel("Infected Population")
         plt.xlabel("Time (days)")
-        plt.ylim(0)
         plt.xlim(0,self.FinalTime)
         plt.grid(ls=":", c="grey", axis='y')
         plt.savefig("SIRFinalInfectionCurveNewInfections" + str(self.RecoveryRate) + "-" + str(self.ContactFactor) + ".png", dpi=227)

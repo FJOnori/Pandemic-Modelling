@@ -50,12 +50,12 @@ def grid_frame_update(sim):
                     if n < 0.1:
                         newsim[x,y] = 5
                 elif sim[x,y] == 5:
-                    if n < (1/120):
+                    if n < (1/210):
                         newsim[x,y] = 1
         
         return newsim
 
-def grid_sim(simtime=10000, gridsize=100):
+def grid_sim(simtime=500, gridsize=100):
         sim = setup_grid_centre(gridsize) #blue, #red, #grey
         cmap = colors.ListedColormap(['#1e68b3','#b81111','#aaacad'])
         bounds = [0,2,4,6]
@@ -88,7 +88,7 @@ def grid_sim(simtime=10000, gridsize=100):
         plt.xlim(0,simtime)
         plt.ylim(0,gridsize**2)
         plt.legend()
-        plt.savefig("SIRS/SIRSgridsim.png", dpi=227)
+        plt.savefig("SIRSgridsim.png", dpi=227)
             
            
 grid_sim()
