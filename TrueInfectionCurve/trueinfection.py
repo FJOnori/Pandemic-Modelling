@@ -8,7 +8,7 @@ from scipy.ndimage.interpolation import shift
 def deathCurve():
     
     COVIDdf = (pd.read_csv('owid-covid-data-uk.csv')).replace(np.nan, 0)
-    dr = np.mean( shift(np.array(COVIDdf['new_cases_smoothed'])[109:313], -10,cval=0)  / np.array(COVIDdf['new_deaths_smoothed'])[109:313] )
+    dr = np.mean( shift(np.array(COVIDdf['new_cases_smoothed'])[109:313], -14,cval=0)  / np.array(COVIDdf['new_deaths_smoothed'])[109:313] )
     infec = shift(dr*np.array(COVIDdf['new_deaths_smoothed']), -14, cval=0)
     recinfec = np.array(COVIDdf['new_cases_smoothed'])
  
@@ -16,7 +16,7 @@ def deathCurve():
     plt.plot(infec, c='#b81111')
     plt.plot(recinfec, c='#b81111', ls="--")
     plt.xlim(0,200)
-    plt.ylim(0,120000)
+    plt.ylim(0,140000)
     plt.title("Estimated Infection Curve")
     plt.xlabel("Time (days)")
     plt.ylabel("Total Infections")

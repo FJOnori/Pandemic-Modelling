@@ -6,7 +6,7 @@ class SEIRSV2_Model():
 
     def __init__(self):
         
-        self.TotalTime          = 200
+        self.TotalTime          = 1000
         self.dt                 = 0.1
         self.Iterations         = int(self.TotalTime/self.dt)
         self.PopulationLR       = 0.9
@@ -28,7 +28,7 @@ class SEIRSV2_Model():
         self.ContactRate        = 1/3
         self.ContactRateH       = np.round(0.2, 4)
         self.ContactRateL       = np.round(0.12, 4)
-        self.PopulationCut      = 0.1
+        self.PopulationCut      = 0.00001
 
         self.ContactRateV1      = self.ContactRate * 0.19
         self.ContactRateV2      = self.ContactRate * 0.09
@@ -65,7 +65,7 @@ class SEIRSV2_Model():
         
         IPA = []
 
-        for b in np.arange(0.12, 0.22, 0.02):
+        for b in np.linspace(0.118, 0.206, 5):
             
             S = [self.PopulationLR - self.InitalExposuresLR]; E = [self.InitalExposuresLR]; I = [0]; R = [0]
             V1 = [0]; EV1 = [0]; IV1 = [0]; RV1 = [0]
@@ -170,16 +170,16 @@ class SEIRSV2_Model():
         
         
     
-        labels = np.arange(0.12,0.22,0.02)
+        labels = np.linspace(0.118, 0.206, 5)
         for j in range(0, len(IPA)):
-            plt.plot(time, IPA[j], label=str(np.round(labels[j],2)), ls="--", alpha=0.8)
+            plt.plot(time, IPA[j]*67000000, label=str(np.round(labels[j],2)), ls="--", alpha=0.8)
 
-        plt.legend()
-        plt.xlim(0,200)
-        plt.title("COVIDGE Model Lineplot - " + str(self.ContactRateL) + " - " + str(self.ContactRateH) + " - " + str(self.PopulationCut))
+        plt.title("COVIDGE Adaptive Model, Population cutoff = " + str(self.PopulationCut))
         plt.xlabel("Time (Days)")
-        plt.ylabel("Proportion of Population")
-        plt.savefig("COVIDGElineplot - " + str(self.ContactRateL) + " - " + str(self.ContactRateH) + " - " + str(self.PopulationCut) + ".png", dpi=227) 
+        plt.ylabel("Population")
+        plt.grid(ls=":", c="grey", axis='y')
+        plt.legend()
+        plt.savefig("COVIDGE Adaptive Model, Population cutoff - " + str(self.PopulationCut) + ".png", dpi=227) 
    
         
 

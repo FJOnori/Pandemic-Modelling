@@ -18,31 +18,31 @@ class SIR_Model():
     def NumInt(self):
 
         S ,I, R, = [self.S_initial], [self.I_inital], [0]
-
-        for n in np.arange(0,1000):
+        T = [0]
+        for n in np.arange(0,100000):
 
                dS = - self.ContactRate*(I[n]/self.population)*S[n] 
                dI = self.ContactRate*(I[n]/self.population)*S[n] - self.RecoveryRate*I[n]
                dR = self.RecoveryRate*I[n]
 
-               self.population += dI + dR + dS
+               self.population += (dI + dR + dS)*0.01
 
-               S.append(S[n] + dS)
-               I.append(I[n] + dI)
-               R.append(R[n] + dR)
+               S.append(S[n] + dS*0.01)
+               I.append(I[n] + dI*0.01)
+               R.append(R[n] + dR*0.01)
+               T.append(n*0.01)
 
-        return np.array(S), np.array(I), np.array(R)
+        return np.array(S), np.array(I), np.array(R), np.array(T)
     
     def Lineplot(self):
-        S,I,R = self.NumInt()
-        plt.plot(S, c='#1e68b3', label="Susceptible")
-        plt.plot(I, c='#b81111', label="Infected")
-        plt.plot(R, c='#aaacad', label="Recovered")
+        S,I,R,T = self.NumInt()
+        plt.plot(T,S, c='#1e68b3', label="Susceptible")
+        plt.plot(T,I, c='#b81111', label="Infected")
+        plt.plot(T,R, c='#aaacad', label="Recovered")
         plt.title("SIR Numerical Integration")
         plt.ylabel("Population Proportion")
         plt.xlabel("Time (days)")
         plt.xlim(0,1000)
-        plt.ylim(0,1)
         plt.legend()
         plt.savefig("SIR/SIRnumint.png", dpi=227)
 

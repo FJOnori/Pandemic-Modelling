@@ -25,9 +25,7 @@ class SEIRSV2_Model():
         self.DeathRateCOVIDSVHR = self.DeathRateCOVIDHR * 0.19
         self.DeathRateCOVIDDVHR = self.DeathRateCOVIDHR * 0.09
 
-        self.ContactRate        = 0
-        self.ContactRateL       = 0.118
-        self.ContactRateH       = 0.206
+        self.ContactRate        = 0.2
         self.ContactRateV1      = self.ContactRate * 0.19
         self.ContactRateV2      = self.ContactRate * 0.09
         self.ContactRateHR      = self.ContactRate * 2
@@ -36,10 +34,10 @@ class SEIRSV2_Model():
         self.LatencyRate        = 1/6
         self.RecoveryRate       = 1/10
         self.ImmunityLossRate   = 1/210
-        self.Vaccination1Rate   = 0
-        self.Vaccination2Rate   = 0
-        self.Vaccination1HRRate = 0
-        self.Vaccination2HRRate = 0
+        self.Vaccination1Rate   = 1/100
+        self.Vaccination2Rate   = 1/100
+        self.Vaccination1HRRate = 1/50
+        self.Vaccination2HRRate = 1/50
         self.Popcut             = 0.0001
 
     def NumInt(self):
@@ -58,26 +56,6 @@ class SEIRSV2_Model():
             
 
             InfectionProb = (I[n]+E[n]+IV1[n]+EV1[n]+EV2[n]+IV2[n]+EHR[n]+IHR[n]+EV1HR[n]+IV1HR[n]+EV2HR[n]+IV2HR[n])/self.Population
-
-            if InfectionProb*self.Population > self.Popcut:
-                self.ContactRate        = self.ContactRateL
-                self.ContactRateV1      = self.ContactRate * 0.19
-                self.ContactRateV2      = self.ContactRate * 0.09
-                self.ContactRateHR      = self.ContactRate * 2
-                self.ContactRateHRV1    = self.ContactRateHR * 0.19
-                self.ContactRateHRV2    = self.ContactRateHR * 0.09
-                self.Vaccination1Rate   = 1/100
-                self.Vaccination2Rate   = 1/100
-                self.Vaccination1HRRate = 1/50
-                self.Vaccination2HRRate = 1/50
-            elif InfectionProb*self.Population <= self.Popcut:
-                self.ContactRate        = self.ContactRateH
-                self.ContactRateV1      = self.ContactRate * 0.19
-                self.ContactRateV2      = self.ContactRate * 0.09
-                self.ContactRateHR      = self.ContactRate * 2
-                self.ContactRateHRV1    = self.ContactRateHR * 0.19
-                self.ContactRateHRV2    = self.ContactRateHR * 0.09
-
             
             NewInfections = self.ContactRate * InfectionProb * S[n]
             NewInfectionsV1 = self.ContactRateV1 * InfectionProb * V1[n]
@@ -143,19 +121,18 @@ class SEIRSV2_Model():
         plt.xlim(0,self.TotalTime)
         plt.title("COVIDGE Model Lineplot")
         plt.xlabel("Time (Days)")
-        plt.ylabel("Proportion of Population")
+        plt.ylabel("Population Proportion")
         plt.legend()
-        plt.savefig("COVIDGElineplot - " + str(self.Popcut) + ".png", dpi=227) 
+        plt.savefig("COVIDGElineplot.png", dpi=227) 
         plt.close()
         
-        
-
-        plt.title("COVIDGE Model Stackplot, Popcut = " + str(self.Popcut))
+        plt.title("COVIDGE Model Stackplot")
         plt.xlim(0,self.TotalTime)
         plt.xlabel("Time (Days)")
-        plt.ylabel("Proportion of Population")
+        plt.ylabel("Population Proportion")
         plt.stackplot(np.arange(0,self.TotalTime+1, self.dt),SP,IP,RP,V1P,V2P, labels=["Susceptible","Infectious","Recovered","Vaccinated","Fully Vaccinated"], colors=['#1e68b3','#b81111','#aaacad','#5e017d','#439603'])
-        plt.savefig("COVIDGEstackplot - " + str(self.Popcut) + ".png", dpi=227) 
+        plt.legend()
+        plt.savefig("COVIDGEstackplot.png", dpi=227) 
 
 
 if __name__ == "__main__":

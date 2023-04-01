@@ -27,11 +27,11 @@ class SIR_Model():
                dI = self.ContactRate*(I[n]/self.population)*S[n] - self.RecoveryRate*I[n]
                dR = self.RecoveryRate*I[n] - self.ImmunityLossRate*R[n]
 
-               self.population += dI + dR + dS
+               self.population += (dI + dR + dS)*0.01
 
-               S.append(S[n] + dS)
-               I.append(I[n] + dI)
-               R.append(R[n] + dR)
+               S.append(S[n] + dS*0.01)
+               I.append(I[n] + dI*0.01)
+               R.append(R[n] + dR*0.01)
     
 
         return np.array(S), np.array(I), np.array(R)
@@ -44,7 +44,6 @@ class SIR_Model():
         plt.title("SIRS Numerical Integration")
         plt.ylabel("Population Proportion")
         plt.xlabel("Time (days)")
-        plt.xlim(0,1000)
         plt.ylim(0,1)
         plt.legend()
         plt.savefig("SIRS/SIRSnumint.png", dpi=227)
